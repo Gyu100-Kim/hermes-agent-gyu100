@@ -27,7 +27,7 @@ hermes (명령)
 ## 1. 세 개의 진입점
 
 `pyproject.toml`의 `[project.scripts]`가 정의합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="308-311" />
+[`pyproject.toml` 308-311행](../pyproject.toml#L308-L311)
 
 ```toml
 [project.scripts]
@@ -53,7 +53,7 @@ hermes-acp = "acp_adapter.entry:main"
 `hermes update`로 복구할 수 있어야"** 하기 때문입니다.
 
 ### 2-1. 부트스트랩(가장 먼저 import)
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="59-62" />
+[`hermes_cli/main.py` 59-62행](../hermes_cli/main.py#L59-L62)
 ```python
 try:
     import hermes_bootstrap  # noqa: F401
@@ -67,7 +67,7 @@ except ModuleNotFoundError:
 실패한 `hermes update` 상황에서도 이 모듈이 없다고 크래시하지 않기 위함입니다.
 
 ### 2-2. 조기 자가치유(early recovery)
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="88-93" />
+[`hermes_cli/main.py` 88-93행](../hermes_cli/main.py#L88-L93)
 ```python
 from hermes_cli import _early_recovery as _early_recovery_mod
 try:
@@ -80,7 +80,7 @@ except Exception:
 최소한을 복구합니다.
 
 ### 2-3. main() 본문의 초기 정리 작업
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="14351-14391" />
+[`hermes_cli/main.py` 14351-14391행](../hermes_cli/main.py#L14351-L14391)
 `main()`(14351행)은 순서대로:
 1. `_set_process_title()` — `ps`/`top`에서 `python3.11` 대신 `hermes`로 보이게(장식).
 2. `configure_windows_stdio()` — Windows UTF-8 stdio 강제.
@@ -103,14 +103,14 @@ Hermes CLI는 `git`처럼 **하위 명령(subcommand)** 구조입니다(`hermes 
 `argparse`(파이썬 표준 명령행 파서)로 파서 트리를 구성합니다.
 
 ### 3-1. 하위 명령 파서 등록
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="431-470" />
+[`hermes_cli/main.py` 431-470행](../hermes_cli/main.py#L431-L470)
 파일 상단(431-470행)에서 각 하위 명령의 파서 빌더를 import합니다:
 `build_cron_parser`, `build_gateway_parser`, `build_model_parser`,
 `build_setup_parser`, `build_slack_parser`, `build_mcp_parser`, ... 각 하위 명령은
 `hermes_cli/subcommands/` 아래 별도 파일로 모듈화되어 있습니다.
 
 ### 3-2. 파서 조립 + 기본 함수 연결
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="14393-14416" />
+[`hermes_cli/main.py` 14393-14416행](../hermes_cli/main.py#L14393-L14416)
 ```python
 from hermes_cli._parser import build_top_level_parser
 parser, subparsers, chat_parser = build_top_level_parser()
@@ -122,7 +122,7 @@ build_model_parser(subparsers, cmd_model=cmd_model)   # model → cmd_model
 심어둡니다. 이게 argparse의 흔한 디스패치 패턴입니다.
 
 ### 3-3. 실제 디스패치
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="16420-16441" />
+[`hermes_cli/main.py` 16420-16441행](../hermes_cli/main.py#L16420-L16441)
 ```python
 # Default to chat if no command specified
 if args.command is None:
@@ -142,7 +142,7 @@ else:
 
 ## 4. 기본 명령은 chat — cmd_chat()
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="2444-2483" />
+[`hermes_cli/main.py` 2444-2483행](../hermes_cli/main.py#L2444-L2483)
 `cmd_chat(args)`(2444행)가 대화형 세션을 시작합니다. 주요 초기 처리:
 
 - `use_tui = _resolve_use_tui(args)` (2446행) — TUI로 띄울지 클래식 REPL로 띄울지
@@ -164,7 +164,7 @@ else:
 `cmd_chat`은 결국 `cli.py`의 `HermesCLI`를 만들어 REPL(읽기-평가-출력 반복)을
 돌립니다. 이 클래스가 CLI 인터페이스의 심장입니다.
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/cli.py" lines="3880-3902" />
+[`cli.py` 3880-3902행](../cli.py#L3880-L3902)
 ```python
 class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
     """Interactive CLI for the Hermes Agent.

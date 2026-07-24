@@ -33,7 +33,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
   파일로 저장되며, 맨 위 **frontmatter**(YAML 메타데이터: name/description/version
   등)와 그 아래 **본문**(구체적 방법·명령·팁)으로 구성됩니다.
 - 실제 예시로 `skills/creative/ascii-art/SKILL.md`를 봅시다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/skills/creative/ascii-art/SKILL.md" lines="1-22" />
+  [`skills/creative/ascii-art/SKILL.md` 1-22행](../skills/creative/ascii-art/SKILL.md#L1-L22)
   ```markdown
   ---
   name: ascii-art
@@ -62,7 +62,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
 
 사용자가 `/learn`을 쓰면(또는 에이전트가 스스로), 방금 한 작업/문서/코드를 재사용
 가능한 스킬로 정제합니다. 담당은 `agent/learn_prompt.py`.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/learn_prompt.py" lines="2-23" />
+[`agent/learn_prompt.py` 2-23행](../agent/learn_prompt.py#L2-L23)
 (`agent/learn_prompt.py` 2-23행) 핵심 설계:
 
 - `/learn`은 **열려 있습니다**(5-13행): 코드 디렉토리, API 문서 URL, 방금 대화에서
@@ -83,7 +83,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
 
 `learn_prompt.py`는 스킬 작성 표준을 프롬프트에 박아 넣어, 에이전트가 유지보수자가
 손으로 쓰듯 작성하게 만듭니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/learn_prompt.py" lines="34-45" />
+[`agent/learn_prompt.py` 34-45행](../agent/learn_prompt.py#L34-L45)
 (34-45행) 가장 중요한 규칙:
 
 - `description`은 **한 문장, 60자 이하**, 마침표로 끝, 마케팅 단어 금지, 스킬 이름
@@ -103,7 +103,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
 
 스킬이 계속 쌓이면 낡거나 중복되거나 안 쓰이는 것이 생깁니다. **큐레이터(curator)**
 가 이를 백그라운드에서 정비합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/curator.py" lines="1-20" />
+[`agent/curator.py` 1-20행](../agent/curator.py#L1-L20)
 (`agent/curator.py` 1-20행)
 
 - **비활성 트리거**(3-7행): 별도 cron 데몬 없이, 에이전트가 idle이고 마지막 큐레이터
@@ -128,7 +128,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
 
 스킬이 "방법"이라면, 메모리는 "사실/취향"입니다(예: 사용자 이름, 선호 언어).
 `agent/memory_manager.py`가 여러 메모리 provider를 하나로 오케스트레이션합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/memory_manager.py" lines="1-24" />
+[`agent/memory_manager.py` 1-24행](../agent/memory_manager.py#L1-L24)
 (`agent/memory_manager.py` 1-24행)
 
 - **단일 통합 지점**(3-4행): 예전엔 백엔드별 코드가 흩어져 있었는데, 하나의
@@ -149,7 +149,7 @@ Hermes의 이름값을 하는 핵심 특징은 **세션을 거듭하며 스스�
 
 `agent/learning_graph.py`는 "시간이 지나며 무엇을 배웠는지"를 데스크톱에서
 그래프로 보여줍니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/learning_graph.py" lines="1-14" />
+[`agent/learning_graph.py` 1-14행](../agent/learning_graph.py#L1-L14)
 (`agent/learning_graph.py` 1-14행)
 
 - 노드: 베이스가 아닌 **학습/프로필 스킬**과 `MEMORY.md`/`USER.md`의 **기억 조각**을

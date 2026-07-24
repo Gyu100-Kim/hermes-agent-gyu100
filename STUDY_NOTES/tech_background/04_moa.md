@@ -42,15 +42,19 @@
 
 - Hermes는 `/moa <prompt>`로 MoA를 명시적으로 호출합니다. 대화 루프의 진입부에서
   MoA 설정을 분리합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="881-892" />
+  [`agent/conversation_loop.py` 881-892행](../../agent/conversation_loop.py#L881-L892)
   (`run_conversation`이 `moa_config`를 받고, `decode_moa_turn`으로 사용자 메시지에서
   MoA 설정을 디코드.)
 - **설정 CLI**: `hermes moa`(list/configure/delete)로 MoA에 쓸 provider/model 슬롯을
   구성합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_cli/main.py" lines="14403-14416" />
+  [`hermes_cli/main.py` 14403-14416행](../../hermes_cli/main.py#L14403-L14416)
 - 실제 MoA 실행 로직은 `agent/moa_loop.py`, 설정 인코딩/디코딩은
   `hermes_cli/moa_config.py`에 있습니다.
 - **왜 명시적 호출인가 (설계 트레이드오프):** MoA는 여러 모델을 부르므로 비용이
   큽니다. 그래서 기본 경로가 아니라 사용자가 `/moa`로 명시할 때만 켜지는, "필요할 때
   쓰는 고급 기능"으로 배치되어 있습니다. 이는 [05](../05_tools.md)의 좁은 허리 철학과
   일관됩니다.
+
+## 더 읽어보기 (공식 자료)
+
+- Mixture-of-Agents 논문: <https://arxiv.org/abs/2406.04692>

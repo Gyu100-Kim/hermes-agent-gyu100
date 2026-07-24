@@ -38,7 +38,7 @@ Hermes가 **공급망 보안(supply-chain security)** 을 매우 진지하게 �
 
 ## 2. 코어 의존성 역할별 분류
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="19-140" />
+[`pyproject.toml` 19-140행](../pyproject.toml#L19-L140)
 (`pyproject.toml` 19-140행) 기준으로 역할별로 묶으면:
 
 | 역할 | 패키지(고정 버전) | 무엇을 위한 것인가 |
@@ -65,7 +65,7 @@ Hermes가 **공급망 보안(supply-chain security)** 을 매우 진지하게 �
 
 ## 3. 선택적 의존성(extras)
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="142-302" />
+[`pyproject.toml` 142-302행](../pyproject.toml#L142-L302)
 `[project.optional-dependencies]`(142행~)는 특정 기능을 켤 때만 필요한 패키지들을
 이름표(extra) 아래 묶습니다. 예:
 
@@ -89,7 +89,7 @@ matrix의 `python-olm`은 Windows/최신 macOS에 휠이 없어 `[all]`에 넣�
 
 ## 4. 설계 원칙 ① 정확 버전 고정(exact pinning)
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="20-39" />
+[`pyproject.toml` 20-39행](../pyproject.toml#L20-L39)
 
 핵심 근거 주석(20-39행):
 > "Exact pins mean the only way a new package version reaches a user is via an
@@ -113,7 +113,7 @@ matrix의 `python-olm`은 Windows/최신 macOS에 휠이 없어 `[all]`에 넣�
 
 무거운/선택적 백엔드는 처음 쓰는 순간 설치합니다. 담당 모듈은
 `tools/lazy_deps.py`입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/lazy_deps.py" lines="1-66" />
+[`tools/lazy_deps.py` 1-66행](../tools/lazy_deps.py#L1-L66)
 
 모듈 최상단 docstring(1-66행)이 이유와 보안 모델을 아주 잘 설명합니다:
 

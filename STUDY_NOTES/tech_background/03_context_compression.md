@@ -46,7 +46,7 @@ LLM은 한 번에 처리할 수 있는 텍스트 양(**컨텍스트 윈도우**)
 
 - **압축기**: `agent/context_compressor.py`가 **보조(auxiliary) 모델**로 중간 턴을
   요약하고 **머리/꼬리를 보호**합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/context_compressor.py" lines="1-17" />
+  [`agent/context_compressor.py` 1-17행](../../agent/context_compressor.py#L1-L17)
   - 구조화된 요약 템플릿(Resolved/Pending, 7-8행), 필터-안전 프리앰블(9행),
     토큰 예산 기반 꼬리 보호(13행), 도구 출력 사전 정리(14행), 반복 압축 지원(12행).
 - **압축이 유일한 프롬프트-캐시 예외**: `agent/system_prompt.py` 1-9행은 "시스템
@@ -57,3 +57,7 @@ LLM은 한 번에 처리할 수 있는 텍스트 양(**컨텍스트 윈도우**)
 - **영속성 연결**: 압축된 원본 메시지는 삭제되지 않고 `messages.active=0`/`compacted=1`
   로 표시되며, 세션은 `parent_session_id` 체인으로 분할됩니다
   ([06_state.md](../06_state.md)).
+
+## 더 읽어보기 (공식 자료)
+
+- "Lost in the Middle" 논문: <https://arxiv.org/abs/2307.03172>

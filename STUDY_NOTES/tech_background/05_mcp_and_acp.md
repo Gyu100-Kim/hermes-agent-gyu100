@@ -45,7 +45,7 @@
 - **MCP 클라이언트**: `tools/mcp_tool.py`가 외부 MCP 서버에 stdio/HTTP/SSE로
   접속해 도구를 발견하고, **Hermes 도구 레지스트리에 등록**해 내장 도구처럼 부르게
   합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/mcp_tool.py" lines="2-11" />
+  [`tools/mcp_tool.py` 2-11행](../../tools/mcp_tool.py#L2-L11)
   - 설정은 `~/.hermes/config.yaml`의 `mcp_servers` 키(9행). `mcp` 패키지는 **선택
     의존성**이라 없으면 no-op(10-11행) — [02](../02_modules_and_stack.md)의 지연
     의존성 철학과 일치.
@@ -55,3 +55,8 @@
 - **ACP 서버(어댑터)**: `acp_adapter/`가 Hermes를 ACP 에이전트로 노출합니다.
   진입점 `acp_adapter/entry.py`는 stdout을 JSON-RPC 통로로 예약하고 로깅은 stderr로
   분리합니다([10](../10_subsystems.md) 3절). 실행: `hermes-acp` / `hermes acp`.
+
+## 더 읽어보기 (공식 자료)
+
+- MCP 사양: <https://modelcontextprotocol.io/>
+- ACP 사양: <https://agentclientprotocol.com/>

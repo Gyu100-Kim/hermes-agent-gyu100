@@ -23,7 +23,7 @@
 "매일 아침 9시에 뉴스 요약해줘" 같은 반복/예약 작업을 담당합니다.
 
 ### 1-1. 스케줄러
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/cron/scheduler.py" lines="1-9" />
+[`cron/scheduler.py` 1-9행](../cron/scheduler.py#L1-L9)
 ```
 Cron job scheduler - executes due jobs.
 Provides tick() which checks for due jobs and runs them. The gateway
@@ -41,13 +41,13 @@ runs at a time if multiple processes overlap.
 - `croniter`(코어 의존성, [02](02_modules_and_stack.md))로 다음 실행 시각을 계산.
 
 ### 1-2. 작업 저장과 출력
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/cron/jobs.py" lines="1-6" />
+[`cron/jobs.py` 1-6행](../cron/jobs.py#L1-L6)
 (`cron/jobs.py` 1-6행) — 작업은 `~/.hermes/cron/jobs.json`, 출력은
 `~/.hermes/cron/output/{job_id}/{timestamp}.md`에 저장. 여기도 크로스 프로세스
 파일 락(22-33행)으로 `jobs.json`의 임계 구역을 보호합니다.
 
 ### 1-3. 실행 원장(executions)
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/cron/executions.py" lines="1-6" />
+[`cron/executions.py` 1-6행](../cron/executions.py#L1-L6)
 (`cron/executions.py` 1-6행) — 각 실행 시도의 **내구성 있는 감사 원장**입니다.
 "재시도 큐가 아니라 알려진 사실의 기록"이며, 종료 상태(completed/failed/unknown)는
 불변입니다. 여기서도 [06](06_state.md)의 `apply_wal_with_fallback`를 재사용(29행)해
@@ -90,7 +90,7 @@ runs at a time if multiple processes overlap.
 **ACP(Agent Client Protocol)** 는 코드 에디터 같은 클라이언트가 에이전트와 표준
 방식으로 통신하는 프로토콜입니다(배경: [tech_background/05_mcp_and_acp.md](tech_background/05_mcp_and_acp.md)).
 진입점은 `acp_adapter/entry.py`.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/acp_adapter/entry.py" lines="1-14" />
+[`acp_adapter/entry.py` 1-14행](../acp_adapter/entry.py#L1-L14)
 (`acp_adapter/entry.py` 1-14행)
 
 - `~/.hermes/.env`에서 환경변수를 로드하고, **로깅을 stderr로** 보냅니다 — stdout은
@@ -123,6 +123,41 @@ Hermes의 "얼굴들" 중 GUI 계열입니다(Python이 아닌 JS/TS 스택, [02
 > 에이전트 코어가 합니다. 이는 [04](04_agent_loop.md)에서 본 `*_callback` 인자들로
 > 실현됩니다 — 코어가 진행 상황을 콜백으로 흘려보내면 각 프론트엔드가 자기 방식대로
 > 그립니다. "코어 하나, 얼굴 여럿"의 최종 형태입니다.
+
+---
+
+## 5. 실행 환경 추상화와 연구용 러너
+
+마지막으로, [06](06_state.md)의 세션 저장에는 포함되지 않는(파일 상단 docstring이
+명시) 별도 시스템 두 가지를 짚습니다.
+
+### 5-1. 실행 환경 추상화 (`tools/environments/`)
+
+에이전트의 `terminal` 도구가 실제 명령을 실행하는 **백엔드**들입니다. 공통 ABC
+[`tools/environments/base.py`](../tools/environments/base.py)를 상속해
+local / docker / ssh / modal / daytona / singularity 백엔드가 구현되어 있으며,
+어떤 백엔드든 에이전트 코어에는 동일하게 보입니다. 격리 개념과 각 백엔드의
+트레이드오프는 [tech_background/09_execution_environments.md](tech_background/09_execution_environments.md)
+에서 다룹니다.
+
+### 5-2. 연구용 배치 러너
+
+루트의 세 파일은 대화형 사용이 아니라 **학습 데이터(궤적, trajectory) 생성**을 위한
+연구용 러너입니다.
+
+- [`batch_runner.py`](../batch_runner.py) — 데이터셋(JSONL)의 여러 프롬프트에 대해
+  에이전트를 **병렬 배치 실행**하고, 체크포인트로 중단 지점부터 재개하며, 궤적을
+  from/value 쌍 형식으로 저장합니다(1-21행 docstring).
+- [`mini_swe_runner.py`](../mini_swe_runner.py) — SWE(소프트웨어 엔지니어링) 과제용
+  러너. Hermes의 실행 환경(local/docker/modal)을 재사용해 명령을 돌리고, 궤적을
+  `batch_runner.py`와 호환되는 Hermes 형식으로 출력합니다(1-14행 docstring).
+- [`trajectory_compressor.py`](../trajectory_compressor.py) — 완성된 궤적을 목표
+  토큰 예산 안으로 **후처리 압축**합니다. 앞/뒤 턴은 보호하고 중간만 압축하는 전략
+  (1-12행 docstring)은 [07](07_prompt_context.md)의 대화 압축과 같은 철학입니다.
+
+> **왜 코어와 분리돼 있나:** 이들은 배포된 에이전트의 기능이 아니라 모델 학습
+> 파이프라인의 일부입니다. 그래서 세션 DB에 저장되지 않고(`hermes_state.py`
+> docstring 13행), 별도 단일 파일 모듈로 루트에 있습니다.
 
 ---
 

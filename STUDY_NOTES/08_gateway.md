@@ -42,7 +42,7 @@ GatewayRunner (gateway/run.py)   ← 전체 생명주기 관리
 
 ## 2. GatewayRunner — 생명주기 관리자
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/run.py" lines="1-14" />
+[`gateway/run.py` 1-14행](../gateway/run.py#L1-L14)
 ```
 Gateway runner - entry point for messaging platform integrations.
 - start_gateway(): Start all configured platform adapters
@@ -51,7 +51,7 @@ Gateway runner - entry point for messaging platform integrations.
 (`gateway/run.py` 1-14행)
 
 `GatewayRunner`는 여러 믹스인을 상속해 관심사를 분리합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/run.py" lines="3249-3249" />
+[`gateway/run.py` 3249행](../gateway/run.py#L3249)
 ```python
 class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, GatewaySlashCommandsMixin):
 ```
@@ -70,7 +70,7 @@ CLI와 동일한 이유(Windows UTF-8 stdio, 부분 업데이트 복원)입니�
 ## 3. 세션 관리와 자동 이어가기(auto-continue)
 
 `gateway/session.py`가 "메시지가 어디서 왔고, 이걸 어느 대화에 붙일지"를 관리합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/session.py" lines="1-9" />
+[`gateway/session.py` 1-9행](../gateway/session.py#L1-L9)
 ```
 Session management for the gateway.
 - Session context tracking (where messages come from)
@@ -81,7 +81,7 @@ Session management for the gateway.
 (`gateway/session.py` 1-9행)
 
 핵심 개념: **자동 이어가기 신선도 창(auto-continue freshness window)**.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/session.py" lines="31-37" />
+[`gateway/session.py` 31-37행](../gateway/session.py#L31-L37)
 ```python
 _AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT = 60 * 60   # 1시간
 ```
@@ -100,7 +100,7 @@ _AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT = 60 * 60   # 1시간
 ## 4. 전달(delivery) 라우팅
 
 `gateway/delivery.py`는 응답과 cron 작업 결과를 **어디로 보낼지** 결정합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/delivery.py" lines="1-9" />
+[`gateway/delivery.py` 1-9행](../gateway/delivery.py#L1-L9)
 ```
 Delivery routing for cron job outputs and agent responses.
 Routes messages based on:
@@ -127,7 +127,7 @@ whatsapp_cloud, weixin, webhook, api_server, bluebubbles, yuanbao, qqbot,
 msgraph 등). Telegram/Discord/Slack 같은 대형 플랫폼과 다수의 플러그인 플랫폼은
 **레지스트리를 통해 자기등록**됩니다.
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/platform_registry.py" lines="1-29" />
+[`gateway/platform_registry.py` 1-29행](../gateway/platform_registry.py#L1-L29)
 (`gateway/platform_registry.py` 1-29행) — [05](05_tools.md)의 도구 레지스트리와
 매우 닮은 패턴입니다: 어댑터가 `platform_registry.register(PlatformEntry(...))`로
 자기 자신을 등록하면, 게이트웨이는 하드코딩된 if/elif 없이 이를 발견해 인스턴스화
@@ -146,7 +146,7 @@ msgraph 등). Telegram/Discord/Slack 같은 대형 플랫폼과 다수의 플러
 ## 6. 새 플랫폼 추가하기 — 플러그인 vs 코어
 
 `gateway/platforms/ADDING_A_PLATFORM.md`가 두 경로를 안내합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/gateway/platforms/ADDING_A_PLATFORM.md" lines="1-16" />
+[`gateway/platforms/ADDING_A_PLATFORM.md` 1-16행](../gateway/platforms/ADDING_A_PLATFORM.md#L1-L16)
 
 - **플러그인 경로(권장)**(5-15행): `~/.hermes/plugins/`(또는 `plugins/platforms/`)에
   `plugin.yaml` + `adapter.py`를 만들고, `BasePlatformAdapter`를 상속해

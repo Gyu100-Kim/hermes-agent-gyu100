@@ -47,7 +47,7 @@
   선택자로 조작합니다([05] 참조).
 - **저수준 CDP 탈출구**: `tools/browser_cdp_tool.py`가 단일 도구 `browser_cdp`로
   임의 CDP 명령을 전달합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/browser_cdp_tool.py" lines="2-16" />
+  [`tools/browser_cdp_tool.py` 2-16행](../../tools/browser_cdp_tool.py#L2-L16)
   - CDP URL은 `/browser connect`(→ `BROWSER_CDP_URL`) 또는 `config.yaml`의
     `browser.cdp_url`, 또는 CDP 기반 클라우드 세션에서 옵니다(6-9행).
   - 네이티브 다이얼로그, iframe 범위 평가, 쿠키/네트워크 제어, 저수준 탭 관리 등
@@ -56,3 +56,8 @@
   페이지 본문/쿠키/DOM/스토리지를 읽지 않는 검사(inspection) 메서드만 허용해, 저수준
   힘을 신중히 통제합니다. 이는 3절의 "escape hatch는 제한적으로"라는 원칙의 실제
   구현입니다.
+
+## 더 읽어보기 (공식 자료)
+
+- CDP 메서드 레퍼런스: <https://chromedevtools.github.io/devtools-protocol/>
+- Playwright: <https://playwright.dev/> / Puppeteer: <https://pptr.dev/>

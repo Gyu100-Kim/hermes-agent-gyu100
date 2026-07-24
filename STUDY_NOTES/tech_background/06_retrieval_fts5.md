@@ -43,7 +43,7 @@
 
 - **FTS5 가상 테이블**: `messages_fts`가 모든 세션 메시지를 색인합니다. `content=`
   external-content 방식으로 원본을 중복 저장하지 않습니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="1245-1251" />
+  [`hermes_state.py` 1245-1251행](../../hermes_state.py#L1245-L1251)
 - **트리거 자동 동기화**: `messages`의 INSERT/DELETE/UPDATE에 트리거가 걸려 색인이
   자동 갱신됩니다(1253-1286행).
 - **트라이그램 색인으로 CJK 검색**: 기본 토크나이저가 한글/한자를 글자 단위로 쪼개
@@ -53,3 +53,8 @@
   `_HERMES_CORE_TOOLS`)로 에이전트가 과거 대화를 스스로 검색합니다.
 - **설계 의도:** 서버 없는 SQLite 하나로 로컬-우선·오프라인 검색을 구현하려는 선택.
   Hermes의 "어디서든 돈다" 목표와 일치합니다.
+
+## 더 읽어보기 (공식 자료)
+
+- SQLite FTS5 공식 문서: <https://sqlite.org/fts5.html>
+- SQLite WAL 공식 문서: <https://sqlite.org/wal.html>

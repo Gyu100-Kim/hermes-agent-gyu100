@@ -34,7 +34,7 @@ AIAgent (run_agent.py)  ← 에이전트 객체(상태 보관소)
 ## 1. AIAgent — 상태를 담는 그릇
 
 `AIAgent`는 `run_agent.py`에 정의된, 에이전트의 모든 상태를 담는 클래스입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/run_agent.py" lines="400-406" />
+[`run_agent.py` 400-406행](../run_agent.py#L400-L406)
 ```python
 class AIAgent:
     """
@@ -47,7 +47,7 @@ class AIAgent:
 (`run_agent.py` 400-406행)
 
 생성자(`__init__`, 423행~)의 인자들이 에이전트의 성격을 결정합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/run_agent.py" lines="423-452" />
+[`run_agent.py` 423-452행](../run_agent.py#L423-L452)
 주요 인자:
 - `base_url`, `api_key`, `provider`, `model` — 어떤 LLM을 어디로 호출할지.
 - `api_mode` — API 형식(예: OpenAI chat completions / Responses / codex 등).
@@ -73,7 +73,7 @@ class AIAgent:
 
 ## 2. run_conversation — 한 턴의 시작
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="849-880" />
+[`agent/conversation_loop.py` 849-880행](../agent/conversation_loop.py#L849-L880)
 ```python
 def run_conversation(
     agent,
@@ -107,7 +107,7 @@ def run_conversation(
 
 루프에 들어가기 전, "한 턴에 한 번만" 해야 하는 준비 작업을 모아둔 함수가
 `build_turn_context`입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="901-913" />
+[`agent/conversation_loop.py` 901-913행](../agent/conversation_loop.py#L901-L913)
 주석(901-908행)이 프롤로그가 하는 일을 나열합니다:
 - stdio 가드, 재시도 카운터 리셋
 - 사용자 메시지 살균(sanitization)
@@ -126,7 +126,7 @@ def run_conversation(
 ## 4. 핵심 루프: while 조건 한 줄 뜯어보기
 
 Hermes 전체에서 가장 중요한 한 줄입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="1009-1009" />
+[`agent/conversation_loop.py` 1009행](../agent/conversation_loop.py#L1009)
 ```python
 while (api_call_count < agent.max_iterations and agent.iteration_budget.remaining > 0) or agent._budget_grace_call:
 ```
@@ -153,7 +153,7 @@ while (api_call_count < agent.max_iterations and agent.iteration_budget.remainin
 ## 5. 루프 한 바퀴 안에서 일어나는 일
 
 루프 본문 앞부분(1010-1044행)을 봅시다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="1009-1044" />
+[`agent/conversation_loop.py` 1009-1044행](../agent/conversation_loop.py#L1009-L1044)
 
 1. **사용자 중간 개입(redirect) 처리** (1010-1018행): 모델이 일하는 도중 사용자가
    정정 메시지를 보냈으면(`_drain_pending_redirect`), `_apply_active_turn_redirect`로

@@ -25,7 +25,7 @@ Hermes는 모든 대화를 **SQLite 데이터베이스** 하나(`state.db`)에 �
 ## 1. 왜 파일이 아니라 SQLite인가
 
 파일 상단 docstring이 설계 결정을 요약합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="3-15" />
+[`hermes_state.py` 3-15행](../hermes_state.py#L3-L15)
 ```
 SQLite State Store ... replacing the per-session JSONL file approach.
 
@@ -53,7 +53,7 @@ SQLite 하나로 옮기면 이 두 문제를 트랜잭션과 인덱스로 깔끔
 입니다.
 
 ### 2-1. sessions 표
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="1056-1105" />
+[`hermes_state.py` 1056-1105행](../hermes_state.py#L1056-L1105)
 ```sql
 CREATE TABLE IF NOT EXISTS sessions (
     id TEXT PRIMARY KEY,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   "세션↔작업공간 바인딩"을 위한 기록.
 
 ### 2-2. messages 표
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="1107-1131" />
+[`hermes_state.py` 1107-1131행](../hermes_state.py#L1107-L1131)
 ```sql
 CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS messages (
 
 문제는 **모든 파일시스템이 WAL을 지원하진 않는다**는 점(NFS/SMB/일부 FUSE)입니다.
 그래서 `apply_wal_with_fallback`이 방어적으로 처리합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="521-584" />
+[`hermes_state.py` 521-584행](../hermes_state.py#L521-L584)
 - WAL 설정을 시도하고(569행), 실패 시 원인이 "WAL 비호환"이면 경고 후
   `journal_mode=DELETE`로 폴백(582-584행). DELETE는 NFS에서도 동작하는 옛 기본값.
 - **손상 버그 회피**(553-555행): 특정 SQLite 빌드에 WAL-reset 손상 버그(#69784)가
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS messages (
 과거 모든 세션의 메시지를 여기 색인해 `session_search` 도구로 빠르게 찾습니다
 (배경 이론은 [tech_background/06_retrieval_fts5.md](tech_background/06_retrieval_fts5.md)).
 
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="1245-1261" />
+[`hermes_state.py` 1245-1261행](../hermes_state.py#L1245-L1261)
 ```sql
 CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
     content,
@@ -167,7 +167,7 @@ CREATE TRIGGER IF NOT EXISTS messages_fts_insert AFTER INSERT ON messages ...
 
 기본 FTS5 토크나이저(unicode61)는 한글/한자/일본어를 글자 단위로 쪼개 구(phrase)
 검색이 깨집니다. 그래서 별도의 **트라이그램(trigram)** 인덱스를 둡니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/hermes_state.py" lines="1289-1316" />
+[`hermes_state.py` 1289-1316행](../hermes_state.py#L1289-L1316)
 - 트라이그램 토크나이저(1315행)는 겹치는 3바이트 조각을 만들어 어떤 문자 체계든
   부분 문자열 검색이 되게 합니다(1290-1292행).
 - **비용 최적화**(1293-1302행): 트라이그램 인덱스는 원문의 약 2.6배로 가장 비싼
