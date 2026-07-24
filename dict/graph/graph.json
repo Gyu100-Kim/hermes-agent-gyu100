@@ -1,0 +1,3901 @@
+{
+ "nodes": [
+  {
+   "id": "llm",
+   "name_ko": "LLM (대규모 언어 모델)",
+   "name_en": "Large Language Model",
+   "category": "llm",
+   "definition": "방대한 텍스트로 학습되어, 입력 텍스트 다음에 올 토큰을 예측하는 방식으로 글을 생성하는 AI 모델. Hermes의 두뇌 역할을 하며, 도구 호출 능력을 통해 텍스트 생성을 넘어 실제 행동을 수행합니다."
+  },
+  {
+   "id": "transformer",
+   "name_ko": "트랜스포머",
+   "name_en": "Transformer",
+   "category": "llm",
+   "definition": "2017년 논문 \"Attention Is All You Need\"에서 제안된 신경망 구조로, 현대 LLM의 표준 아키텍처. 어텐션 메커니즘으로 문장 안의 단어 간 관계를 병렬로 계산합니다."
+  },
+  {
+   "id": "attention",
+   "name_ko": "어텐션",
+   "name_en": "Attention",
+   "category": "llm",
+   "definition": "입력의 각 부분이 다른 부분을 '얼마나 참고할지'를 가중치로 계산하는 메커니즘. 컨텍스트 윈도우 안의 모든 토큰 쌍을 비교하므로, 컨텍스트가 길수록 계산 비용이 커집니다."
+  },
+  {
+   "id": "token",
+   "name_ko": "토큰",
+   "name_en": "Token",
+   "category": "llm",
+   "definition": "LLM이 텍스트를 처리하는 최소 단위. 대략 영어 단어의 3/4, 한국어 1~2글자 수준입니다. API 요금과 컨텍스트 한도 모두 토큰 단위로 계산됩니다."
+  },
+  {
+   "id": "context-window",
+   "name_ko": "컨텍스트 윈도우",
+   "name_en": "Context Window",
+   "category": "llm",
+   "definition": "모델이 한 번의 호출에서 볼 수 있는 토큰의 최대 개수. 대화형 API는 상태가 없어 매 호출마다 대화 전체를 다시 보내야 하므로, 대화가 길어지면 컨텍스트 압축이 필요해집니다."
+  },
+  {
+   "id": "system-prompt",
+   "name_ko": "시스템 프롬프트",
+   "name_en": "System Prompt",
+   "category": "llm",
+   "definition": "대화 시작 시 모델에게 역할·규칙·맥락을 지정하는 특별한 메시지. Hermes에서는 세션당 한 번 조립되어 대화 내내 바이트 단위로 고정됩니다(프롬프트 캐싱 보호). 재조립되는 유일한 예외는 컨텍스트 압축입니다."
+  },
+  {
+   "id": "prompt",
+   "name_ko": "프롬프트",
+   "name_en": "Prompt",
+   "category": "llm",
+   "definition": "모델에 입력으로 주는 텍스트 전체. 시스템 프롬프트 + 대화 이력 + 도구 결과가 모두 프롬프트에 포함되어 매 호출 전송됩니다."
+  },
+  {
+   "id": "prompt-caching",
+   "name_ko": "프롬프트 캐싱",
+   "name_en": "Prompt Caching",
+   "category": "llm",
+   "definition": "이전 호출과 앞부분(prefix)이 바이트 단위로 동일하면 그 구간의 계산(KV 캐시)을 재사용해 비용·지연을 크게 줄이는 제공자 기능. Hermes의 최상위 설계 원칙 — 과거 컨텍스트를 바꾸거나 시스템 프롬프트를 중간에 재조립하면 캐시가 무효화되므로 금지됩니다."
+  },
+  {
+   "id": "kv-cache",
+   "name_ko": "KV 캐시",
+   "name_en": "KV Cache",
+   "category": "llm",
+   "definition": "어텐션 계산의 중간 결과(Key/Value)를 저장해 두는 캐시. 프롬프트 캐싱이 재사용하는 대상이 바로 이것입니다."
+  },
+  {
+   "id": "sampling",
+   "name_ko": "샘플링 / 온도",
+   "name_en": "Sampling / Temperature",
+   "category": "llm",
+   "definition": "모델이 다음 토큰을 고를 때 확률분포에서 뽑는 과정. 온도(temperature)가 높을수록 다양하고 낮을수록 결정적입니다. 자기일관성 같은 기법은 샘플링의 다양성을 활용합니다."
+  },
+  {
+   "id": "reasoning-model",
+   "name_ko": "추론 모델 / 사고 과정",
+   "name_en": "Reasoning Model / Chain-of-Thought",
+   "category": "llm",
+   "definition": "답하기 전에 내부적으로 긴 사고 과정(chain-of-thought)을 생성하는 모델·기법. \"단계별로 생각하기\"가 정답률을 올린다는 2022년 CoT 연구에서 출발했으며, ReAct의 이론적 토대 중 하나입니다."
+  },
+  {
+   "id": "hallucination",
+   "name_ko": "환각",
+   "name_en": "Hallucination",
+   "category": "llm",
+   "definition": "모델이 사실이 아닌 내용을 그럴듯하게 생성하는 현상. 도구 호출로 실제 데이터를 조회(그라운딩)하면 완화할 수 있습니다."
+  },
+  {
+   "id": "grounding",
+   "name_ko": "그라운딩",
+   "name_en": "Grounding",
+   "category": "llm",
+   "definition": "모델의 출력을 실제 세계의 근거(도구 결과, 검색 결과, 파일 내용)에 붙들어 매는 것. ReAct에서 관찰(Observation)이 생각을 그라운딩하는 역할을 합니다."
+  },
+  {
+   "id": "auxiliary-model",
+   "name_ko": "보조 모델",
+   "name_en": "Auxiliary Model",
+   "category": "llm",
+   "definition": "본 대화가 아닌 잡무(요약, 제목 생성, 백그라운드 정비)에 쓰는 값싸고 빠른 모델. Hermes에서는 컨텍스트 압축의 요약과 큐레이터 실행에 사용됩니다."
+  },
+  {
+   "id": "embedding",
+   "name_ko": "임베딩",
+   "name_en": "Embedding",
+   "category": "llm",
+   "definition": "텍스트를 의미를 담은 숫자 벡터로 변환한 것. 벡터 검색의 기반이며, 비슷한 의미의 텍스트는 가까운 벡터가 됩니다."
+  },
+  {
+   "id": "agent",
+   "name_ko": "에이전트",
+   "name_en": "Agent",
+   "category": "agent",
+   "definition": "LLM이 도구 호출을 통해 환경과 상호작용하며 여러 단계에 걸쳐 목표를 수행하는 시스템. 단발성 질문-답변 챗봇과 달리, 계획하고 행동하고 관찰 결과를 반영하는 루프를 반복합니다."
+  },
+  {
+   "id": "aiagent",
+   "name_ko": "AIAgent 클래스",
+   "name_en": "AIAgent (run_agent.py)",
+   "category": "agent",
+   "definition": "Hermes의 에이전트 코어 클래스(`run_agent.py`). 모델/제공자/세션/도구/콜백 상태를 보관하고, run_conversation 루프를 구동합니다. 기본 최대 반복 횟수는 90회입니다."
+  },
+  {
+   "id": "tool-calling",
+   "name_ko": "도구 호출 (함수 호출)",
+   "name_en": "Tool Calling / Function Calling",
+   "category": "agent",
+   "definition": "LLM에게 함수 목록(도구 스키마)을 알려주고, 모델이 자연어 대신 `{\"name\": ..., \"arguments\": ...}` 형태의 구조화된 호출을 내놓게 하는 기능. 텍스트 생성만 하던 모델이 실제 행동을 하게 만드는 관문입니다."
+  },
+  {
+   "id": "tool-calling-loop",
+   "name_ko": "도구 호출 루프",
+   "name_en": "Tool-Calling Loop",
+   "category": "agent",
+   "definition": "모델 호출 → 도구 실행 → 결과 반환 → 다시 모델 호출을 반복하는 에이전트의 심장 박동. 모델이 도구 호출 없이 최종 답을 내놓거나 반복 예산이 소진되면 종료됩니다."
+  },
+  {
+   "id": "run-conversation",
+   "name_ko": "run_conversation 루프",
+   "name_en": "run_conversation",
+   "category": "agent",
+   "definition": "Hermes의 대화 루프 구현(`agent/conversation_loop.py`). 재시도·폴백·압축·도구 디스패치·사후 훅을 모두 포함하며, `while (api_call_count < max_iterations and budget.remaining > 0) or grace_call` 조건으로 돌아갑니다."
+  },
+  {
+   "id": "turn",
+   "name_ko": "턴",
+   "name_en": "Turn",
+   "category": "agent",
+   "definition": "사용자 메시지 하나에 대해 에이전트가 응답을 완성하기까지의 한 사이클. 한 턴 안에 여러 번의 모델 호출과 도구 실행이 있을 수 있습니다."
+  },
+  {
+   "id": "iteration-budget",
+   "name_ko": "반복 예산",
+   "name_en": "Iteration Budget",
+   "category": "agent",
+   "definition": "한 턴에서 허용되는 모델 호출 횟수의 상한. 무한 루프와 비용 폭주를 막는 안전장치이며, Hermes에서는 부모와 서브에이전트가 예산을 공유합니다."
+  },
+  {
+   "id": "grace-call",
+   "name_ko": "그레이스 콜",
+   "name_en": "Grace Call",
+   "category": "agent",
+   "definition": "반복 예산이 소진됐을 때, 어중간하게 끊기지 않도록 '마무리 답변을 만들기 위한 마지막 한 번의 호출'을 허용하는 장치."
+  },
+  {
+   "id": "react",
+   "name_ko": "ReAct 패턴",
+   "name_en": "ReAct (Reason + Act)",
+   "category": "agent",
+   "definition": "생각(Thought) → 행동(Action) → 관찰(Observation)을 반복하는 에이전트 패턴(2022년 논문). 행동이 생각을 그라운딩하고 생각이 행동을 조직화합니다. 네이티브 도구 호출은 이 패턴의 구조화된 후예입니다."
+  },
+  {
+   "id": "role-alternation",
+   "name_ko": "역할 교대 불변식",
+   "name_en": "Role Alternation",
+   "category": "agent",
+   "definition": "assistant(도구 호출) → tool(결과) → assistant(다음 응답) 순서로 역할이 엄격히 교대해야 하는 규칙. 같은 역할이 연속되거나 합성 user 메시지를 중간에 끼우면 API 오류와 캐시 무효화를 일으킵니다."
+  },
+  {
+   "id": "message-protocol",
+   "name_ko": "메시지 프로토콜",
+   "name_en": "Message Protocol (roles)",
+   "category": "agent",
+   "definition": "system/user/assistant/tool 네 가지 역할로 구성되는 대화 형식. 도구 결과는 tool 역할 메시지로 반환되며 tool_call_id로 어느 호출의 결과인지 짝지어집니다."
+  },
+  {
+   "id": "tool-call-id",
+   "name_ko": "tool_call_id",
+   "name_en": "tool_call_id",
+   "category": "agent",
+   "definition": "모델이 낸 각 도구 호출에 부여되는 고유 식별자. 병렬 도구 호출 시 어떤 결과가 어떤 호출에 대응하는지 구분하는 데 필수입니다."
+  },
+  {
+   "id": "parallel-tool-calls",
+   "name_ko": "병렬 도구 호출",
+   "name_en": "Parallel Tool Calls",
+   "category": "agent",
+   "definition": "모델이 독립적인 여러 도구를 한 응답에서 동시에 호출하는 기능. 서로 의존성이 없는 작업(여러 파일 읽기 등)의 지연을 줄입니다."
+  },
+  {
+   "id": "retry-fallback",
+   "name_ko": "재시도와 폴백",
+   "name_en": "Retry & Fallback",
+   "category": "agent",
+   "definition": "모델 API 오류(레이트리밋, 일시 장애) 시 재시도하고, 반복 실패 시 다른 모델/제공자로 갈아타는 복원 메커니즘. 크리덴셜 풀과 결합해 가용성을 높입니다."
+  },
+  {
+   "id": "provider",
+   "name_ko": "LLM 제공자",
+   "name_en": "LLM Provider",
+   "category": "agent",
+   "definition": "OpenAI, Anthropic, Google 등 모델 API를 제공하는 회사/서비스. Hermes는 제공자 추상화 계층으로 서로 다른 API 형식을 통일해, 같은 루프에서 어떤 모델이든 쓸 수 있게 합니다."
+  },
+  {
+   "id": "model-metadata",
+   "name_ko": "모델 메타데이터",
+   "name_en": "Model Metadata",
+   "category": "agent",
+   "definition": "각 모델의 컨텍스트 한도, 지원 기능(도구 호출, 비전), 가격 등의 정보. 압축 임계값 계산과 기능 분기에 사용됩니다."
+  },
+  {
+   "id": "credential-pool",
+   "name_ko": "크리덴셜 풀",
+   "name_en": "Credential Pool",
+   "category": "agent",
+   "definition": "같은 제공자의 API 키를 여러 개 등록해 두고, 레이트리밋이나 잔액 소진 시 자동으로 다음 키로 회전(failover)하는 시스템."
+  },
+  {
+   "id": "moa",
+   "name_ko": "Mixture-of-Agents (MoA)",
+   "name_en": "Mixture-of-Agents",
+   "category": "agent",
+   "definition": "여러 LLM에게 같은 질문을 주고 그 답들을 다시 다른 LLM이 종합해 최종 답을 만드는 추론 시점 조합 기법. Hermes에서는 `/moa` 명령으로 명시적으로 호출합니다(비용이 크므로 기본 경로가 아님)."
+  },
+  {
+   "id": "proposer-aggregator",
+   "name_ko": "제안자/종합자",
+   "name_en": "Proposer / Aggregator",
+   "category": "agent",
+   "definition": "MoA의 두 역할: 제안자(proposer)들이 초안을 내고, 종합자(aggregator)가 초안들을 읽고 하나의 개선된 답으로 합칩니다."
+  },
+  {
+   "id": "ensemble",
+   "name_ko": "앙상블",
+   "name_en": "Ensemble",
+   "category": "agent",
+   "definition": "여러 모델의 예측을 결합해 단일 모델보다 나은 결과를 얻는 고전적 머신러닝 기법(배깅, 부스팅 등). MoA는 생성 태스크용 앙상블로 볼 수 있습니다."
+  },
+  {
+   "id": "self-consistency",
+   "name_ko": "자기일관성",
+   "name_en": "Self-Consistency",
+   "category": "agent",
+   "definition": "같은 모델에서 여러 답을 샘플링해 다수결로 결정하는 기법. '여러 모델' 대신 '여러 시도'를 쓰는 MoA의 단순 버전입니다."
+  },
+  {
+   "id": "llm-as-judge",
+   "name_ko": "LLM 심판",
+   "name_en": "LLM-as-a-Judge",
+   "category": "agent",
+   "definition": "강한 LLM에게 후보 답변들을 채점·선택하게 하는 기법. 종합자 대신 '심판'을 쓰는 변형이며 평가 벤치마크에서도 널리 쓰입니다."
+  },
+  {
+   "id": "moe",
+   "name_ko": "Mixture-of-Experts (MoE)",
+   "name_en": "Mixture-of-Experts",
+   "category": "agent",
+   "definition": "하나의 모델 내부에서 토큰마다 일부 파라미터(전문가)만 활성화하는 아키텍처. 이름이 비슷한 MoA(완성된 여러 모델의 외부 조합)와 자주 혼동되지만 완전히 다른 개념입니다."
+  },
+  {
+   "id": "subagent",
+   "name_ko": "서브에이전트 / 위임",
+   "name_en": "Subagent / Delegation",
+   "category": "agent",
+   "definition": "메인 에이전트가 하위 작업을 떼어 별도 에이전트 인스턴스에 맡기는 것. Hermes의 `delegate` 도구가 이를 수행하며, 부모와 반복 예산을 공유해 폭주를 막습니다."
+  },
+  {
+   "id": "delegation",
+   "name_ko": "델리게이션 (작업 위임)",
+   "name_en": "Delegation",
+   "category": "agent",
+   "definition": "복잡한 작업을 하위 작업으로 나눠 서브에이전트에 맡기는 패턴. 컨텍스트를 분리해 메인 대화를 깨끗하게 유지하는 효과도 있습니다. 다중 에이전트 협업에는 칸반이 사용됩니다."
+  },
+  {
+   "id": "kanban",
+   "name_ko": "칸반 (다중 에이전트 보드)",
+   "name_en": "Kanban",
+   "category": "agent",
+   "definition": "여러 에이전트가 작업을 주고받는 내구성 있는 작업 보드. 디스패처가 작업을 배분하고 워커 에이전트들이 처리하는 다중 에이전트 협업 계층입니다."
+  },
+  {
+   "id": "tool",
+   "name_ko": "도구",
+   "name_en": "Tool",
+   "category": "tools",
+   "definition": "에이전트가 호출할 수 있는 기능 하나(터미널, 파일 읽기, 웹 검색 등). 스키마(모델에게 보이는 명세)와 핸들러(실제 실행 코드)의 쌍으로 구성됩니다."
+  },
+  {
+   "id": "tool-schema",
+   "name_ko": "도구 스키마",
+   "name_en": "Tool Schema",
+   "category": "tools",
+   "definition": "도구의 이름·설명·매개변수(JSON Schema)를 담은 명세. 모든 도구의 스키마가 매 API 호출에 전송되므로, 스키마 크기가 곧 상시 비용입니다 — 좁은 허리 원칙의 근거."
+  },
+  {
+   "id": "json-schema",
+   "name_ko": "JSON Schema",
+   "name_en": "JSON Schema",
+   "category": "tools",
+   "definition": "JSON 데이터의 구조(타입, 필수 필드, 열거값)를 선언하는 표준. 도구 매개변수 명세에 사용되며, 모델은 이 스키마에 맞는 인자를 생성합니다."
+  },
+  {
+   "id": "tool-registry",
+   "name_ko": "도구 레지스트리",
+   "name_en": "Tool Registry",
+   "category": "tools",
+   "definition": "모든 도구의 등록부(`tools/registry.py`). 도구 이름 → 핸들러/스키마/가용성 검사 매핑을 보관하며, 디스패치의 진입점입니다."
+  },
+  {
+   "id": "self-registration",
+   "name_ko": "자기 등록",
+   "name_en": "Self-Registration",
+   "category": "tools",
+   "definition": "각 도구 파일이 import될 때 스스로 `registry.register(...)`를 호출해 등록되는 패턴. 코어를 수정하지 않고 도구를 추가할 수 있게 합니다."
+  },
+  {
+   "id": "ast-discovery",
+   "name_ko": "AST 기반 도구 발견",
+   "name_en": "AST-based Discovery",
+   "category": "tools",
+   "definition": "`discover_builtin_tools`가 `tools/*.py`를 실제 import하기 전에 AST(추상 구문 트리)로 검사해, 모듈 수준에서 `registry.register`를 호출하는 파일만 import하는 최적화. 불필요한 import 비용과 부작용을 피합니다."
+  },
+  {
+   "id": "dispatch",
+   "name_ko": "디스패치",
+   "name_en": "Dispatch",
+   "category": "tools",
+   "definition": "모델이 낸 도구 호출(이름+인자)을 받아 레지스트리에서 핸들러를 찾아 실행하고, 결과를 정규화해 돌려주는 과정. 예외가 나도 에러 봉투로 감싸 루프가 죽지 않게 합니다."
+  },
+  {
+   "id": "handler",
+   "name_ko": "핸들러",
+   "name_en": "Handler",
+   "category": "tools",
+   "definition": "도구의 실제 실행 코드(파이썬 함수). 동기/비동기 모두 지원되며, 디스패치가 호출합니다."
+  },
+  {
+   "id": "result-normalization",
+   "name_ko": "결과 정규화",
+   "name_en": "Result Normalization",
+   "category": "tools",
+   "definition": "핸들러가 돌려준 다양한 형태(문자열, dict, 예외)의 결과를 모델에 반환 가능한 일관된 형식으로 변환하는 단계. 결과 크기 상한도 여기서 적용됩니다."
+  },
+  {
+   "id": "error-envelope",
+   "name_ko": "에러 봉투",
+   "name_en": "Error Envelope",
+   "category": "tools",
+   "definition": "도구 실행 실패를 `{\"error\": \"...\"}` JSON으로 감싸 모델에 돌려주는 패턴. 루프를 죽이는 대신 모델이 오류를 읽고 스스로 대처(재시도, 다른 방법)하게 만듭니다."
+  },
+  {
+   "id": "check-fn",
+   "name_ko": "가용성 검사 (check_fn)",
+   "name_en": "check_fn (Service Gating)",
+   "category": "tools",
+   "definition": "도구가 전제 조건(API 토큰, 서비스 설정)이 갖춰졌을 때만 모델에 노출되게 하는 검사 함수. 조건이 없으면 스키마가 아예 전송되지 않아 비용이 0이 됩니다 — 풋프린트 사다리의 3번 단계."
+  },
+  {
+   "id": "toolset",
+   "name_ko": "툴셋",
+   "name_en": "Toolset",
+   "category": "tools",
+   "definition": "도구들의 논리적 묶음(파일, 브라우저, 스킬 등). 세션·작업별로 활성화할 툴셋을 선택할 수 있습니다."
+  },
+  {
+   "id": "core-tools",
+   "name_ko": "코어 도구",
+   "name_en": "Core Tools (_HERMES_CORE_TOOLS)",
+   "category": "tools",
+   "definition": "terminal, 파일 읽기, 웹 검색처럼 거의 모든 사용자에게 근본적으로 필요한 최소한의 도구 집합. 새 코어 도구 추가는 좁은 허리 원칙상 최후의 수단입니다."
+  },
+  {
+   "id": "terminal-tool",
+   "name_ko": "터미널 도구",
+   "name_en": "Terminal Tool",
+   "category": "tools",
+   "definition": "에이전트가 셸 명령을 실행하는 도구. 실제 실행은 실행 환경 백엔드에 위임되며, 위험 명령은 명령 승인 계층을 거칩니다."
+  },
+  {
+   "id": "file-tools",
+   "name_ko": "파일 도구",
+   "name_en": "File Tools",
+   "category": "tools",
+   "definition": "파일 읽기/쓰기/편집 도구군. 에이전트가 코드베이스를 읽고 수정하는 기본 수단입니다."
+  },
+  {
+   "id": "browser-tool",
+   "name_ko": "브라우저 도구",
+   "name_en": "Browser Tool",
+   "category": "tools",
+   "definition": "에이전트가 웹 브라우저를 조작하는 고수준 도구. 로컬 크로미움과 클라우드 브라우저를 동일 인터페이스로 노출하고, 접근성 트리 스냅샷과 ref 선택자로 조작합니다."
+  },
+  {
+   "id": "browser-cdp-tool",
+   "name_ko": "browser_cdp (CDP 탈출구)",
+   "name_en": "browser_cdp Tool",
+   "category": "tools",
+   "definition": "임의의 CDP 명령을 브라우저에 직접 보내는 저수준 도구. 고수준 도구가 못 다루는 경우(네이티브 다이얼로그, iframe 평가)를 위한 탈출구이며, 허용 메서드 화이트리스트로 통제됩니다."
+  },
+  {
+   "id": "vision-tools",
+   "name_ko": "비전 도구",
+   "name_en": "Vision Tools",
+   "category": "tools",
+   "definition": "이미지를 분석하는 도구군. 비전 요청을 메인 대화 모델과 독립적으로 전문 모델에 라우팅합니다."
+  },
+  {
+   "id": "web-search-tool",
+   "name_ko": "웹 검색 도구",
+   "name_en": "Web Search Tool",
+   "category": "tools",
+   "definition": "에이전트가 웹을 검색해 최신 정보를 얻는 도구. 학습 데이터에 없는 사실의 그라운딩 수단입니다."
+  },
+  {
+   "id": "delegate-tool",
+   "name_ko": "delegate 도구",
+   "name_en": "Delegate Tool",
+   "category": "tools",
+   "definition": "서브에이전트를 띄워 작업을 맡기는 도구. 위임 패턴의 구현입니다."
+  },
+  {
+   "id": "skill-tool",
+   "name_ko": "스킬 도구 (skill_view)",
+   "name_en": "Skill Tools",
+   "category": "tools",
+   "definition": "스킬 본문을 필요할 때 로드하는 도구. 점진적 공개의 2단계(본문 로드)를 담당합니다."
+  },
+  {
+   "id": "computer-use",
+   "name_ko": "컴퓨터 사용",
+   "name_en": "Computer Use",
+   "category": "tools",
+   "definition": "화면 스크린샷을 보고 마우스/키보드를 조작하는 GUI 자동화 도구군. 브라우저를 넘어 데스크톱 전체를 다룹니다."
+  },
+  {
+   "id": "voice-mode",
+   "name_ko": "음성 모드",
+   "name_en": "Voice Mode",
+   "category": "tools",
+   "definition": "음성 입출력(STT/TTS)으로 에이전트와 대화하는 모드."
+  },
+  {
+   "id": "max-result-size",
+   "name_ko": "도구 결과 크기 상한",
+   "name_en": "Max Result Size",
+   "category": "tools",
+   "definition": "도구 결과가 컨텍스트를 폭식하지 않도록 문자 수 상한을 두고 초과분을 자르는 장치. 도구별로 상한을 다르게 설정할 수 있습니다."
+  },
+  {
+   "id": "context-engineering",
+   "name_ko": "컨텍스트 엔지니어링",
+   "name_en": "Context Engineering",
+   "category": "context",
+   "definition": "한정된 컨텍스트 윈도우 안에 '무엇을, 어떤 순서로, 얼마나' 넣을지 설계하는 기술 전반. 프롬프트 계층화, 압축, 점진적 공개가 모두 여기에 속합니다."
+  },
+  {
+   "id": "system-prompt-tiers",
+   "name_ko": "시스템 프롬프트 3계층",
+   "name_en": "System Prompt Tiers",
+   "category": "context",
+   "definition": "Hermes 시스템 프롬프트의 3계층 구조: stable(정체성·규칙, 가장 안정적) → context(호출자 지정 지시·컨텍스트 파일) → volatile(메모리 스냅샷, 가장 잘 변함). 안정적인 것을 앞에 두어 캐시 적중률을 극대화합니다."
+  },
+  {
+   "id": "soul-md",
+   "name_ko": "SOUL.md",
+   "name_en": "SOUL.md",
+   "category": "context",
+   "definition": "에이전트의 정체성과 행동 원칙을 담은 마크다운 파일. 시스템 프롬프트의 stable 계층에 포함되어 에이전트의 '영혼' 역할을 합니다."
+  },
+  {
+   "id": "persona",
+   "name_ko": "페르소나",
+   "name_en": "Persona",
+   "category": "context",
+   "definition": "에이전트가 일관되게 유지하는 성격·말투·가치관. SOUL.md로 정의되며 프로필별로 다르게 설정할 수 있습니다."
+  },
+  {
+   "id": "context-compression",
+   "name_ko": "컨텍스트 압축",
+   "name_en": "Context Compression",
+   "category": "context",
+   "definition": "대화가 컨텍스트 한도에 다가가면 중간 턴들을 보조 모델로 요약해 토큰을 회수하는 메커니즘(`agent/context_compressor.py`). 프롬프트 캐싱을 깨는 유일하게 허용된 예외입니다."
+  },
+  {
+   "id": "summarization",
+   "name_ko": "요약 기반 압축",
+   "name_en": "Summarization",
+   "category": "context",
+   "definition": "오래된 대화 구간을 LLM으로 요약해 짧은 텍스트로 대체하는 압축 방식. 정보 손실과 토큰 회수 사이의 균형이 핵심입니다."
+  },
+  {
+   "id": "structured-summary",
+   "name_ko": "구조화 요약",
+   "name_en": "Structured Summary",
+   "category": "context",
+   "definition": "자유 서술 대신 정해진 템플릿(해결된 질문/미해결 질문/핵심 결정 등)으로 요약을 생성하는 기법. 후속 대화에 필요한 정보가 누락되는 것을 줄입니다."
+  },
+  {
+   "id": "head-tail-protection",
+   "name_ko": "머리/꼬리 보호",
+   "name_en": "Head/Tail Protection",
+   "category": "context",
+   "definition": "압축 시 대화의 머리(초기 지시·목표)와 꼬리(최근 맥락)는 원문 그대로 두고 중간만 요약하는 전략. 중간 소실 연구와도 일치하는 설계입니다."
+  },
+  {
+   "id": "token-budget-tail",
+   "name_ko": "토큰 예산 기반 꼬리 보호",
+   "name_en": "Token-Budget Tail Protection",
+   "category": "context",
+   "definition": "'최근 N개 메시지'가 아니라 '꼬리에 남길 토큰 예산'으로 보호 범위를 정하는 방식. 메시지 길이 편차에 강건합니다."
+  },
+  {
+   "id": "tool-output-pruning",
+   "name_ko": "도구 출력 가지치기",
+   "name_en": "Tool Output Pruning",
+   "category": "context",
+   "definition": "LLM 요약 전에 큰 도구 출력(웹 검색 결과 등)을 \"[web_search] 5 results (2500 chars)\" 같은 한 줄로 대체하는 값싼 사전 처리 단계."
+  },
+  {
+   "id": "lost-in-the-middle",
+   "name_ko": "중간 소실 현상",
+   "name_en": "Lost in the Middle",
+   "category": "context",
+   "definition": "긴 컨텍스트에서 모델이 처음과 끝은 잘 기억하지만 중간 정보는 잘 놓친다는 2023년 연구 결과. '중간부터 요약하라'는 머리/꼬리 보호 설계의 근거입니다."
+  },
+  {
+   "id": "compression-lineage",
+   "name_ko": "압축 계보",
+   "name_en": "Compression Lineage (parent_session_id)",
+   "category": "context",
+   "definition": "압축이 일어나면 새 세션 행을 만들고 `parent_session_id`로 원본을 가리켜, 압축 전 전체 이력을 잃지 않고 추적하는 구조."
+  },
+  {
+   "id": "context-engine",
+   "name_ko": "컨텍스트 엔진",
+   "name_en": "Context Engine",
+   "category": "context",
+   "definition": "컨텍스트 구성 전략을 교체 가능하게 만든 추상화(`agent/context_engine.py`). 기본 압축기 대신 대안 엔진을 플러그인으로 끼울 수 있습니다."
+  },
+  {
+   "id": "context-file",
+   "name_ko": "컨텍스트 파일 (AGENTS.md)",
+   "name_en": "Context Files",
+   "category": "context",
+   "definition": "작업 디렉토리의 AGENTS.md 등 저장소별 지침 파일. 시스템 프롬프트의 context 계층에 삽입되어 저장소 규칙을 에이전트에게 알립니다."
+  },
+  {
+   "id": "compression-cooldown",
+   "name_ko": "압축 쿨다운",
+   "name_en": "Compression Cooldown",
+   "category": "context",
+   "definition": "압축 실패가 반복될 때 일정 시간 재시도를 멈추는 장치. 실패 루프로 인한 비용 낭비를 막습니다."
+  },
+  {
+   "id": "self-improving-agent",
+   "name_ko": "자기개선 에이전트",
+   "name_en": "Self-Improving Agent",
+   "category": "memory",
+   "definition": "실행 경험으로부터 배워 다음 실행이 더 나아지는 에이전트. 가중치 재학습 대신 외부 메모리(스킬, 메모리)에 지식을 축적하는 방식이 실용적 주류입니다(Voyager, Reflexion 계열)."
+  },
+  {
+   "id": "memory",
+   "name_ko": "메모리 (에이전트 기억)",
+   "name_en": "Agent Memory",
+   "category": "memory",
+   "definition": "에이전트가 대화·세션을 넘어 유지하는 지식. 인지과학 분류를 빌려 절차 기억·의미 기억·일화 기억으로 나눠 설계합니다."
+  },
+  {
+   "id": "procedural-memory",
+   "name_ko": "절차 기억",
+   "name_en": "Procedural Memory",
+   "category": "memory",
+   "definition": "'어떻게 하는가'에 대한 기억. Hermes에서는 스킬(작업 절차 문서)로 구현됩니다."
+  },
+  {
+   "id": "semantic-memory",
+   "name_ko": "의미 기억",
+   "name_en": "Semantic Memory",
+   "category": "memory",
+   "definition": "'무엇이 사실인가'에 대한 기억(사용자 선호, 프로젝트 지식). 메모리 도구와 메모리 제공자가 담당합니다."
+  },
+  {
+   "id": "episodic-memory",
+   "name_ko": "일화 기억",
+   "name_en": "Episodic Memory",
+   "category": "memory",
+   "definition": "'무슨 일이 있었는가'에 대한 기억(과거 대화 이력). SessionDB에 저장되고 세션 검색으로 회수됩니다."
+  },
+  {
+   "id": "skill",
+   "name_ko": "스킬",
+   "name_en": "Skill",
+   "category": "memory",
+   "definition": "특정 작업의 절차를 담은 재사용 가능한 지식 단위(디렉토리 + SKILL.md + 스크립트). 에이전트가 스스로 만들고 개선할 수 있어 자기개선의 핵심 매체입니다."
+  },
+  {
+   "id": "skill-md",
+   "name_ko": "SKILL.md",
+   "name_en": "SKILL.md",
+   "category": "memory",
+   "definition": "스킬의 본문 문서. 프런트매터(이름·설명·트리거 조건)와 단계별 절차·주의사항으로 구성됩니다."
+  },
+  {
+   "id": "frontmatter",
+   "name_ko": "프런트매터",
+   "name_en": "Frontmatter",
+   "category": "memory",
+   "definition": "마크다운 파일 머리에 붙는 YAML 메타데이터 블록. 스킬의 이름과 설명만 이 부분에서 읽어 시스템 프롬프트에 실을 수 있게 합니다(점진적 공개의 1단계)."
+  },
+  {
+   "id": "progressive-disclosure",
+   "name_ko": "점진적 공개",
+   "name_en": "Progressive Disclosure",
+   "category": "memory",
+   "definition": "스킬 목록(이름+한 줄 설명)만 상시 노출하고, 본문은 필요할 때 도구로 로드하는 계층적 로딩 전략. 스킬이 늘어나도 상시 토큰 비용이 완만하게 증가합니다."
+  },
+  {
+   "id": "curator",
+   "name_ko": "큐레이터",
+   "name_en": "Curator",
+   "category": "memory",
+   "definition": "유휴 시간에 백그라운드로 스킬 라이브러리를 정비하는 구성요소(`agent/curator.py`). 에이전트가 만든 스킬만 대상으로 하고, 삭제 대신 보관하며, 고정된 스킬은 건드리지 않습니다."
+  },
+  {
+   "id": "archive",
+   "name_ko": "보관 (비파괴 정리)",
+   "name_en": "Archive (Non-Destructive)",
+   "category": "memory",
+   "definition": "스킬을 지우는 대신 보관 폴더로 옮기는 정책. 자동화된 정리가 잘못돼도 복구할 수 있게 하는 안전장치입니다."
+  },
+  {
+   "id": "pinning",
+   "name_ko": "스킬 고정",
+   "name_en": "Skill Pinning",
+   "category": "memory",
+   "definition": "사용자가 중요 표시한 스킬을 큐레이터의 상태 전환(보관 등)에서 제외하는 기능."
+  },
+  {
+   "id": "skills-hub",
+   "name_ko": "스킬 허브",
+   "name_en": "Skills Hub",
+   "category": "memory",
+   "definition": "스킬을 패키징해 공유·배포하는 저장소 생태계. 번들 스킬(모두에게 유용)과 허브 스킬(특정 용도)로 나뉩니다."
+  },
+  {
+   "id": "self-reflection",
+   "name_ko": "자기 성찰",
+   "name_en": "Self-Reflection",
+   "category": "memory",
+   "definition": "에이전트가 자신의 시도·실패를 언어로 되돌아보고 교훈을 추출하는 기법(Reflexion, 2023). Hermes에서는 학습 프롬프트(learn_prompt)가 경험에서 스킬을 뽑아내는 데 사용됩니다."
+  },
+  {
+   "id": "learn-prompt",
+   "name_ko": "학습 프롬프트",
+   "name_en": "Learn Prompt",
+   "category": "memory",
+   "definition": "대화 경험에서 재사용 가능한 절차를 추출해 스킬로 저장하도록 유도하는 프롬프트(`agent/learn_prompt.py`)."
+  },
+  {
+   "id": "memory-provider",
+   "name_ko": "메모리 제공자",
+   "name_en": "Memory Provider",
+   "category": "memory",
+   "definition": "장기 기억 백엔드의 추상화. Honcho 같은 외부 서비스를 플러그인으로 끼울 수 있으며, 메모리 매니저가 수명주기를 관리합니다."
+  },
+  {
+   "id": "memory-manager",
+   "name_ko": "메모리 매니저",
+   "name_en": "Memory Manager",
+   "category": "memory",
+   "definition": "메모리 제공자들을 오케스트레이션하고 메모리 스냅샷을 시스템 프롬프트 volatile 계층에 주입하는 구성요소(`agent/memory_manager.py`)."
+  },
+  {
+   "id": "memory-tool",
+   "name_ko": "메모리 도구",
+   "name_en": "Memory Tool",
+   "category": "memory",
+   "definition": "에이전트가 명시적으로 사실을 저장/조회하는 도구. 문자 수 기반 한도로 모델 독립성을 유지합니다."
+  },
+  {
+   "id": "honcho",
+   "name_ko": "Honcho",
+   "name_en": "Honcho",
+   "category": "memory",
+   "definition": "사용자 모델링에 특화된 외부 메모리 서비스. 사실 목록을 저장하는 전통적 메모리와 달리, 변증법적 API로 질의 시점에 사용자에 대한 통찰을 합성합니다."
+  },
+  {
+   "id": "dialectic-api",
+   "name_ko": "변증법적 API",
+   "name_en": "Dialectic API",
+   "category": "memory",
+   "definition": "\"이 사용자는 어떤 설명 방식을 선호하나?\" 같은 자연어 질문을 던지면 축적된 대화 근거로부터 그 시점에 답을 합성해 주는 Honcho의 질의 인터페이스."
+  },
+  {
+   "id": "theory-of-mind",
+   "name_ko": "마음 이론",
+   "name_en": "Theory of Mind",
+   "category": "memory",
+   "definition": "타인의 신념·욕구·의도를 추론하는 능력(심리학 용어). Honcho는 이를 계산적으로 구현해 사용자의 내적 상태를 모델링하려 합니다."
+  },
+  {
+   "id": "user-modeling",
+   "name_ko": "사용자 모델링",
+   "name_en": "User Modeling",
+   "category": "memory",
+   "definition": "사용자의 선호·지식 수준·목표를 표현으로 축적하는 것. 명시적(사용자가 직접 말한 것) 모델링과 암묵적(행동에서 추론) 모델링로 나뉩니다."
+  },
+  {
+   "id": "sessiondb",
+   "name_ko": "SessionDB",
+   "name_en": "SessionDB",
+   "category": "state",
+   "definition": "Hermes의 상태 저장소 클래스(`hermes_state.py`). SQLite 파일 하나에 세션·메시지·크론 작업 등을 저장하며, WAL 모드와 FTS5 검색을 사용합니다."
+  },
+  {
+   "id": "sqlite",
+   "name_ko": "SQLite",
+   "name_en": "SQLite",
+   "category": "state",
+   "definition": "서버 없이 파일 하나로 동작하는 임베디드 관계형 데이터베이스. 설치·운영 부담이 없어 로컬 우선 도구의 표준 선택입니다."
+  },
+  {
+   "id": "wal",
+   "name_ko": "WAL 모드",
+   "name_en": "Write-Ahead Logging",
+   "category": "state",
+   "definition": "변경을 원본 파일에 바로 쓰지 않고 로그 파일에 먼저 기록하는 SQLite 저널링 모드. 읽기와 쓰기가 서로를 막지 않아 게이트웨이(쓰기)와 검색(읽기)의 동시성이 좋아집니다."
+  },
+  {
+   "id": "session",
+   "name_ko": "세션",
+   "name_en": "Session",
+   "category": "state",
+   "definition": "하나의 연속된 대화 단위. 메시지들이 세션에 속하며, 압축 시 `parent_session_id`로 연결된 새 세션이 만들어집니다."
+  },
+  {
+   "id": "fts",
+   "name_ko": "전문 검색 (FTS)",
+   "name_en": "Full-Text Search",
+   "category": "state",
+   "definition": "문서 안의 단어를 미리 색인해 두고 질의어가 포함된 문서를 빠르게 찾는 기술. LIKE '%...%' 스캔과 달리 문서가 많아도 빠릅니다."
+  },
+  {
+   "id": "fts5",
+   "name_ko": "FTS5",
+   "name_en": "FTS5",
+   "category": "state",
+   "definition": "SQLite 내장 전문 검색 확장(5세대). Hermes의 세션 검색이 이것으로 구현되어, 별도 검색 서버 없이 과거 대화를 검색합니다."
+  },
+  {
+   "id": "inverted-index",
+   "name_ko": "역색인",
+   "name_en": "Inverted Index",
+   "category": "state",
+   "definition": "'단어 → 그 단어가 등장하는 문서 목록' 방향으로 뒤집힌 색인. 책 뒤의 찾아보기와 같은 원리로, 전문 검색을 빠르게 만드는 핵심 자료구조입니다."
+  },
+  {
+   "id": "tokenizer",
+   "name_ko": "토크나이저 (검색)",
+   "name_en": "Tokenizer (FTS)",
+   "category": "state",
+   "definition": "텍스트를 색인 단위(단어)로 쪼개는 규칙. 언어에 따라 적절한 방식이 다르며, FTS5는 unicode61과 트라이그램 등을 제공합니다. LLM의 토큰화와는 다른 개념입니다."
+  },
+  {
+   "id": "unicode61",
+   "name_ko": "unicode61 토크나이저",
+   "name_en": "unicode61",
+   "category": "state",
+   "definition": "유니코드 공백·구두점 기준으로 단어를 나누는 FTS5 기본 토크나이저. 띄어쓰기가 있는 언어(영어·한국어 어절)에 적합하지만 중국어·일본어처럼 띄어쓰기가 없는 언어에는 부적합합니다."
+  },
+  {
+   "id": "trigram",
+   "name_ko": "트라이그램 토크나이저",
+   "name_en": "Trigram",
+   "category": "state",
+   "definition": "텍스트를 3글자 단위로 겹쳐 쪼개 색인하는 방식. 띄어쓰기가 없는 CJK 텍스트와 부분 문자열 검색을 지원하기 위해 Hermes가 별도 색인으로 추가 사용합니다."
+  },
+  {
+   "id": "bm25",
+   "name_ko": "BM25",
+   "name_en": "BM25 (Okapi)",
+   "category": "state",
+   "definition": "검색 결과 순위를 매기는 고전 알고리즘(1994). 질의어가 문서에 얼마나 자주(TF), 얼마나 희귀한 단어인지(IDF), 문서 길이 대비 얼마나 밀집해 있는지를 종합 점수화합니다. FTS5에 내장되어 있습니다."
+  },
+  {
+   "id": "tf-idf",
+   "name_ko": "TF-IDF",
+   "name_en": "TF-IDF",
+   "category": "state",
+   "definition": "단어 빈도(TF)와 역문서빈도(IDF)를 곱해 단어의 중요도를 재는 고전 정보검색 공식. BM25의 전신입니다."
+  },
+  {
+   "id": "external-content",
+   "name_ko": "외부 콘텐츠 테이블",
+   "name_en": "External-Content FTS Table",
+   "category": "state",
+   "definition": "원문을 FTS 테이블에 중복 저장하지 않고 원본 테이블을 참조만 하는 FTS5 구성. 저장 공간을 절약하는 대신 트리거로 색인을 동기화해야 합니다."
+  },
+  {
+   "id": "fts-trigger",
+   "name_ko": "FTS 동기화 트리거",
+   "name_en": "FTS Sync Triggers",
+   "category": "state",
+   "definition": "messages 테이블의 INSERT/UPDATE/DELETE 시 자동으로 FTS 색인을 갱신하는 SQLite 트리거들. 애플리케이션 코드가 색인을 잊어버리는 실수를 원천 차단합니다."
+  },
+  {
+   "id": "session-search",
+   "name_ko": "세션 검색",
+   "name_en": "Session Search",
+   "category": "state",
+   "definition": "에이전트가 과거 대화를 전문 검색하는 도구. 일화 기억의 회수 수단이며, 도구 잡음을 걸러낸 뷰를 검색 대상으로 씁니다."
+  },
+  {
+   "id": "retrieval",
+   "name_ko": "검색 증강 (RAG)",
+   "name_en": "Retrieval / RAG",
+   "category": "state",
+   "definition": "질의와 관련된 문서를 검색해 LLM 컨텍스트에 넣어주는 기법(Retrieval-Augmented Generation, 2020). 모델이 학습하지 못한 지식을 활용하게 합니다."
+  },
+  {
+   "id": "vector-search",
+   "name_ko": "벡터 검색",
+   "name_en": "Vector Search",
+   "category": "state",
+   "definition": "임베딩 벡터 간 거리로 의미적으로 비슷한 문서를 찾는 검색. 키워드가 달라도 의미가 같으면 찾을 수 있지만, 임베딩 모델·벡터 저장소가 추가로 필요합니다."
+  },
+  {
+   "id": "hybrid-search",
+   "name_ko": "하이브리드 검색",
+   "name_en": "Hybrid Search",
+   "category": "state",
+   "definition": "키워드 검색(BM25)과 벡터 검색의 결과를 결합하는 방식. Hermes는 의존성 최소화를 위해 키워드 검색만 내장하고, 벡터 검색은 외부 확장에 맡깁니다."
+  },
+  {
+   "id": "agentic-rag",
+   "name_ko": "에이전트형 RAG",
+   "name_en": "Agentic RAG",
+   "category": "state",
+   "definition": "파이프라인이 항상 검색을 수행하는 고전 RAG와 달리, 에이전트가 필요하다고 판단할 때 검색 도구를 호출하는 방식. Hermes의 세션 검색이 이 패턴입니다."
+  },
+  {
+   "id": "gateway",
+   "name_ko": "게이트웨이",
+   "name_en": "Gateway",
+   "category": "gateway",
+   "definition": "Telegram, Discord, Slack 등 여러 메신저에서 같은 에이전트 코어를 쓰게 해 주는 상시 실행 서비스(`gateway/run.py`의 GatewayRunner). 플랫폼별 차이는 플랫폼 어댑터가 흡수합니다."
+  },
+  {
+   "id": "platform-adapter",
+   "name_ko": "플랫폼 어댑터",
+   "name_en": "Platform Adapter",
+   "category": "gateway",
+   "definition": "각 메신저의 API·메시지 형식을 게이트웨이의 공통 인터페이스로 변환하는 계층(`gateway/platforms/*`). 새 메신저 지원 = 어댑터 하나 추가이며, 절차는 ADDING_A_PLATFORM.md에 문서화되어 있습니다."
+  },
+  {
+   "id": "gateway-session",
+   "name_ko": "게이트웨이 세션",
+   "name_en": "Gateway Session Context",
+   "category": "gateway",
+   "definition": "채팅방/사용자별로 유지되는 대화 컨텍스트(`gateway/session.py`). 어느 플랫폼에서 온 메시지인지에 관계없이 세션과 연결합니다."
+  },
+  {
+   "id": "delivery",
+   "name_ko": "딜리버리 (출력 라우팅)",
+   "name_en": "Delivery",
+   "category": "gateway",
+   "definition": "에이전트의 응답을 올바른 플랫폼·채팅방으로 되돌려 보내는 출력 라우팅 계층(`gateway/delivery.py`). 플랫폼별 메시지 길이 제한·서식 차이를 처리합니다."
+  },
+  {
+   "id": "unified-inbox",
+   "name_ko": "통합 세션",
+   "name_en": "Unified Session",
+   "category": "gateway",
+   "definition": "여러 플랫폼(예: Telegram과 CLI)에서 온 대화를 하나의 세션으로 이어주는 기능. 어디서 말을 걸어도 같은 맥락이 유지됩니다."
+  },
+  {
+   "id": "slash-command",
+   "name_ko": "슬래시 명령",
+   "name_en": "Slash Command",
+   "category": "gateway",
+   "definition": "`/model`, `/moa`, `/new`처럼 사용자가 직접 입력하는 제어 명령. 모든 인터페이스(CLI, TUI, 메신저)에서 공통으로 동작합니다."
+  },
+  {
+   "id": "hermes-cli",
+   "name_ko": "HermesCLI",
+   "name_en": "HermesCLI",
+   "category": "gateway",
+   "definition": "터미널 대화형 인터페이스의 오케스트레이터(`cli.py`). `hermes` 명령의 진입점이며 REPL 루프를 제공합니다."
+  },
+  {
+   "id": "repl",
+   "name_ko": "REPL",
+   "name_en": "REPL",
+   "category": "gateway",
+   "definition": "읽기(Read)-평가(Eval)-출력(Print) 반복(Loop)의 약자. 터미널에서 한 줄씩 입력하고 즉시 응답을 받는 대화형 실행 방식입니다."
+  },
+  {
+   "id": "tui",
+   "name_ko": "TUI (Ink)",
+   "name_en": "TUI",
+   "category": "gateway",
+   "definition": "React 기반 Ink 프레임워크로 만든 터미널 그래픽 인터페이스(`ui-tui/`). 일반 CLI보다 풍부한 표시(패널, 진행 표시)를 제공합니다."
+  },
+  {
+   "id": "tui-gateway",
+   "name_ko": "TUI 게이트웨이",
+   "name_en": "TUI Gateway",
+   "category": "gateway",
+   "definition": "Python 코어와 TypeScript TUI 사이를 잇는 JSON-RPC 브리지(`tui_gateway/`). 프론트엔드와 코어를 분리해 각자 독립적으로 발전할 수 있게 합니다."
+  },
+  {
+   "id": "desktop-app",
+   "name_ko": "데스크톱 앱 (Electron)",
+   "name_en": "Desktop App",
+   "category": "gateway",
+   "definition": "Electron 기반 데스크톱 애플리케이션(`apps/desktop/`). 웹 기술로 만든 UI를 네이티브 앱처럼 배포합니다."
+  },
+  {
+   "id": "web-dashboard",
+   "name_ko": "웹 대시보드",
+   "name_en": "Web Dashboard",
+   "category": "gateway",
+   "definition": "브라우저에서 세션·상태를 보는 웹 UI. 플러그인으로 제공되는 관측 화면입니다."
+  },
+  {
+   "id": "profile",
+   "name_ko": "프로필",
+   "name_en": "Profile",
+   "category": "gateway",
+   "definition": "설정·상태·스킬이 완전히 분리된 독립 실행 환경. 프로필끼리는 의도적으로 서로 영향을 주지 않는 '섬'으로 설계되어 있습니다(생성 시 `--clone` 복사만 허용)."
+  },
+  {
+   "id": "hermes-home",
+   "name_ko": "HERMES_HOME",
+   "name_en": "HERMES_HOME",
+   "category": "gateway",
+   "definition": "Hermes의 상태(설정, DB, 스킬, 로그)가 저장되는 홈 디렉토리. 프로필마다 다른 경로를 가집니다."
+  },
+  {
+   "id": "mcp",
+   "name_ko": "MCP (모델 컨텍스트 프로토콜)",
+   "name_en": "Model Context Protocol",
+   "category": "protocol",
+   "definition": "에이전트가 외부 도구·데이터 소스에 표준 방식으로 연결하게 하는 개방형 프로토콜(Anthropic, 2024). '에이전트 ↔ 도구' 방향의 표준이며, N×M 통합 문제를 해결합니다."
+  },
+  {
+   "id": "mcp-server",
+   "name_ko": "MCP 서버",
+   "name_en": "MCP Server",
+   "category": "protocol",
+   "definition": "도구·리소스를 MCP 형식으로 제공하는 프로그램. Hermes는 이를 발견해 자기 도구 레지스트리에 등록, 내장 도구처럼 호출합니다."
+  },
+  {
+   "id": "mcp-client",
+   "name_ko": "MCP 클라이언트",
+   "name_en": "MCP Client",
+   "category": "protocol",
+   "definition": "MCP 서버에 접속하는 쪽(`tools/mcp_tool.py`). 연결·초기화·도구 발견·호출 중계를 담당합니다."
+  },
+  {
+   "id": "mcp-primitives",
+   "name_ko": "MCP 프리미티브",
+   "name_en": "MCP Primitives",
+   "category": "protocol",
+   "definition": "MCP가 정의하는 기능 단위들: tools(호출 가능한 기능), resources(읽을 수 있는 데이터), prompts(템플릿), sampling(서버가 클라이언트의 LLM에 생성 요청)."
+  },
+  {
+   "id": "mcp-transport",
+   "name_ko": "MCP 전송 계층",
+   "name_en": "MCP Transports",
+   "category": "protocol",
+   "definition": "MCP 메시지가 오가는 통신 방식: stdio(로컬 프로세스), HTTP/Streamable HTTP, SSE(레거시). Hermes는 셋 다 지원합니다."
+  },
+  {
+   "id": "stdio",
+   "name_ko": "stdio 전송",
+   "name_en": "stdio Transport",
+   "category": "protocol",
+   "definition": "서버를 자식 프로세스로 띄우고 표준 입출력 파이프로 통신하는 방식. 네트워크 설정 없이 로컬 도구를 연결하는 가장 간단한 경로입니다."
+  },
+  {
+   "id": "sse",
+   "name_ko": "SSE (서버 전송 이벤트)",
+   "name_en": "Server-Sent Events",
+   "category": "protocol",
+   "definition": "서버가 HTTP 연결을 유지하며 클라이언트로 이벤트를 스트리밍하는 웹 표준. MCP 초기 원격 전송으로 쓰였으나 Streamable HTTP로 대체되는 중입니다."
+  },
+  {
+   "id": "streamable-http",
+   "name_ko": "Streamable HTTP",
+   "name_en": "Streamable HTTP",
+   "category": "protocol",
+   "definition": "단일 HTTP 엔드포인트에서 요청-응답과 스트리밍을 모두 처리하는 현행 MCP 원격 전송 방식."
+  },
+  {
+   "id": "json-rpc",
+   "name_ko": "JSON-RPC 2.0",
+   "name_en": "JSON-RPC 2.0",
+   "category": "protocol",
+   "definition": "JSON으로 원격 함수 호출(요청 id, method, params / 응답 result, error)을 표현하는 경량 프로토콜. MCP, ACP, LSP가 모두 이 위에 만들어졌습니다."
+  },
+  {
+   "id": "acp",
+   "name_ko": "ACP (에이전트 클라이언트 프로토콜)",
+   "name_en": "Agent Client Protocol",
+   "category": "protocol",
+   "definition": "에디터(UI)와 에이전트 사이의 표준 프로토콜(Zed, 2025). MCP가 '에이전트 ↔ 도구'라면 ACP는 'UI ↔ 에이전트' 방향입니다. Hermes의 `acp_adapter/`가 이를 구현해 Zed 등에서 Hermes를 쓸 수 있게 합니다."
+  },
+  {
+   "id": "lsp",
+   "name_ko": "LSP (언어 서버 프로토콜)",
+   "name_en": "Language Server Protocol",
+   "category": "protocol",
+   "definition": "에디터와 언어 분석기를 분리한 프로토콜(Microsoft, 2016). 'N×M 문제를 표준 프로토콜로 푼다'는 아이디어의 원조로, MCP·ACP의 정신적 조상입니다."
+  },
+  {
+   "id": "nxm-problem",
+   "name_ko": "N×M 통합 문제",
+   "name_en": "N×M Integration Problem",
+   "category": "protocol",
+   "definition": "N개의 애플리케이션과 M개의 도구를 연결하려면 N×M개의 개별 통합이 필요해지는 조합 폭발. 표준 프로토콜을 사이에 끼우면 N+M개로 줄어듭니다."
+  },
+  {
+   "id": "capability-negotiation",
+   "name_ko": "기능 협상",
+   "name_en": "Capability Negotiation",
+   "category": "protocol",
+   "definition": "연결 초기화 때 클라이언트와 서버가 서로 지원하는 기능 목록을 교환하는 절차. 버전이 달라도 공통 기능만으로 동작할 수 있게 합니다."
+  },
+  {
+   "id": "cdp",
+   "name_ko": "CDP (크롬 개발자도구 프로토콜)",
+   "name_en": "Chrome DevTools Protocol",
+   "category": "protocol",
+   "definition": "크롬 계열 브라우저를 프로그램으로 조작하는 프로토콜. WebSocket으로 명령(command)/응답(response)/이벤트(event)를 주고받으며, Puppeteer·Playwright의 기반입니다."
+  },
+  {
+   "id": "websocket",
+   "name_ko": "WebSocket",
+   "name_en": "WebSocket",
+   "category": "protocol",
+   "definition": "한 번 연결하면 양방향으로 메시지를 실시간으로 주고받는 통신 프로토콜. 요청-응답만 가능한 HTTP와 달리 서버 쪽 이벤트 통지가 가능해 CDP가 사용합니다."
+  },
+  {
+   "id": "cdp-domain",
+   "name_ko": "CDP 도메인",
+   "name_en": "CDP Domains",
+   "category": "protocol",
+   "definition": "CDP 명령의 대분류(Page, DOM, Network, Runtime, Input 등). 명령 이름은 `도메인.메서드` 형식입니다(예: `Page.navigate`)."
+  },
+  {
+   "id": "headless",
+   "name_ko": "헤드리스 브라우저",
+   "name_en": "Headless Browser",
+   "category": "protocol",
+   "definition": "화면 표시 없이 백그라운드로 실행되는 브라우저. 서버 환경 자동화의 기본 형태입니다."
+  },
+  {
+   "id": "accessibility-tree",
+   "name_ko": "접근성 트리",
+   "name_en": "Accessibility Tree",
+   "category": "protocol",
+   "definition": "스크린리더용으로 브라우저가 만드는 페이지의 의미적 구조(역할·이름·상태). 원시 DOM보다 훨씬 작고 의미가 명확해, 에이전트가 페이지를 '읽는' 형식(ariaSnapshot)으로 적합합니다."
+  },
+  {
+   "id": "cloud-browser",
+   "name_ko": "클라우드 브라우저",
+   "name_en": "Cloud Browser",
+   "category": "protocol",
+   "definition": "원격 서비스(Browserbase 등)에서 실행되는 브라우저를 CDP URL로 연결해 쓰는 방식. 로컬에 크로미움을 설치할 수 없는 환경을 지원합니다."
+  },
+  {
+   "id": "execution-environment",
+   "name_ko": "실행 환경",
+   "name_en": "Execution Environment",
+   "category": "infra",
+   "definition": "터미널 도구의 명령이 실제로 실행되는 백엔드 추상화(`tools/environments/`). local, Docker, SSH, Modal, Daytona, Singularity 백엔드가 같은 인터페이스를 구현합니다."
+  },
+  {
+   "id": "sandbox",
+   "name_ko": "샌드박스 (격리)",
+   "name_en": "Sandbox / Isolation",
+   "category": "infra",
+   "definition": "에이전트가 실행하는 명령이 호스트 시스템을 해치지 못하게 가두는 것. 프로세스 격리 < 컨테이너 < VM 순으로 격리 강도가 올라갑니다."
+  },
+  {
+   "id": "spawn-per-call",
+   "name_ko": "호출별 스폰 모델",
+   "name_en": "Spawn-per-Call",
+   "category": "infra",
+   "definition": "명령마다 새 `bash -c` 프로세스를 띄우는 Hermes의 통일 실행 모델. 상시 셸(long-lived shell)의 상태 꼬임 문제를 피하고, 상태는 세션 스냅샷으로 유지합니다."
+  },
+  {
+   "id": "session-snapshot",
+   "name_ko": "세션 스냅샷 (셸 상태)",
+   "name_en": "Session Snapshot",
+   "category": "infra",
+   "definition": "초기화 시 환경변수·함수·별칭을 한 번 캡처해 두고 매 명령 앞에 다시 source하는 방식. 호출별 스폰에서도 셸 상태가 이어지는 것처럼 보이게 합니다. 작업 디렉토리는 stdout 마커나 임시 파일로 전달됩니다."
+  },
+  {
+   "id": "container",
+   "name_ko": "컨테이너",
+   "name_en": "Container",
+   "category": "infra",
+   "definition": "호스트 커널을 공유하되 네임스페이스로 시야를, cgroups로 자원을 격리한 프로세스 묶음. VM보다 가볍고 빠르게 시작됩니다."
+  },
+  {
+   "id": "namespace",
+   "name_ko": "리눅스 네임스페이스",
+   "name_en": "Linux Namespaces",
+   "category": "infra",
+   "definition": "프로세스가 보는 시스템 자원(프로세스 목록, 네트워크, 파일시스템 마운트)을 분리하는 리눅스 커널 기능. 컨테이너 격리의 반쪽입니다."
+  },
+  {
+   "id": "cgroups",
+   "name_ko": "cgroups",
+   "name_en": "Control Groups",
+   "category": "infra",
+   "definition": "프로세스 그룹의 CPU·메모리·IO 사용량을 제한하는 리눅스 커널 기능. 네임스페이스가 '보이는 것'을 격리한다면 cgroups는 '쓸 수 있는 양'을 격리합니다."
+  },
+  {
+   "id": "container-image",
+   "name_ko": "컨테이너 이미지",
+   "name_en": "Container Image",
+   "category": "infra",
+   "definition": "컨테이너의 파일시스템과 실행 설정을 담은 불변 패키지. 같은 이미지는 어디서든 같은 환경을 만들어 재현성을 보장합니다."
+  },
+  {
+   "id": "docker-backend",
+   "name_ko": "Docker 백엔드",
+   "name_en": "Docker Backend",
+   "category": "infra",
+   "definition": "명령을 Docker 컨테이너 안에서 실행하는 백엔드(`tools/environments/docker.py`). 호스트와 격리된 일회용 작업 공간을 제공합니다."
+  },
+  {
+   "id": "ssh-backend",
+   "name_ko": "SSH 백엔드",
+   "name_en": "SSH Backend",
+   "category": "infra",
+   "definition": "명령을 원격 서버에서 SSH로 실행하는 백엔드. 로컬에 없는 자원(GPU, 특정 OS)을 활용할 수 있습니다."
+  },
+  {
+   "id": "modal-backend",
+   "name_ko": "Modal 백엔드",
+   "name_en": "Modal Backend",
+   "category": "infra",
+   "definition": "서버리스 컴퓨트 플랫폼 Modal에서 명령을 실행하는 백엔드. 필요할 때만 클라우드 샌드박스를 띄워 쓰고 반납합니다."
+  },
+  {
+   "id": "daytona-backend",
+   "name_ko": "Daytona 백엔드",
+   "name_en": "Daytona Backend",
+   "category": "infra",
+   "definition": "에이전트 전용 샌드박스 서비스 Daytona에서 명령을 실행하는 백엔드."
+  },
+  {
+   "id": "singularity-backend",
+   "name_ko": "Singularity/Apptainer 백엔드",
+   "name_en": "Singularity Backend",
+   "category": "infra",
+   "definition": "HPC(고성능 컴퓨팅) 환경 표준인 Apptainer(구 Singularity) 컨테이너로 실행하는 백엔드. 관리자 권한 없이(루트리스) 동작하는 것이 특징입니다."
+  },
+  {
+   "id": "rootless",
+   "name_ko": "루트리스 컨테이너",
+   "name_en": "Rootless Container",
+   "category": "infra",
+   "definition": "root 권한 없이 일반 사용자로 실행되는 컨테이너. 공유 클러스터처럼 관리자 권한을 못 받는 환경에서 필수입니다."
+  },
+  {
+   "id": "vm-isolation",
+   "name_ko": "VM 격리",
+   "name_en": "VM Isolation",
+   "category": "infra",
+   "definition": "하이퍼바이저 위에 별도 커널까지 통째로 띄우는 가장 강한 격리. 컨테이너보다 무겁지만 커널 취약점 공격까지 막습니다(예: Firecracker 마이크로VM)."
+  },
+  {
+   "id": "serverless",
+   "name_ko": "서버리스 컴퓨트",
+   "name_en": "Serverless Compute",
+   "category": "infra",
+   "definition": "서버를 상시 운영하지 않고 함수/작업 단위로 필요할 때만 실행 환경을 빌려 쓰는 모델. 쓴 만큼만 과금됩니다."
+  },
+  {
+   "id": "file-sync",
+   "name_ko": "원격 파일 동기화",
+   "name_en": "Remote File Sync",
+   "category": "infra",
+   "definition": "로컬 파일 도구와 원격 실행 환경 사이에서 파일을 오가게 하는 계층(`tools/environments/file_sync.py`). 원격 백엔드에서도 파일 도구가 동작하게 합니다."
+  },
+  {
+   "id": "reproducibility",
+   "name_ko": "재현성",
+   "name_en": "Reproducibility",
+   "category": "infra",
+   "definition": "같은 입력에서 언제 어디서든 같은 환경·결과가 나오는 성질. 이미지, Nix, 의존성 고정이 모두 이를 위한 수단입니다."
+  },
+  {
+   "id": "nix",
+   "name_ko": "Nix / Flake",
+   "name_en": "Nix",
+   "category": "infra",
+   "definition": "패키지와 환경을 순수 함수처럼 선언해 완전히 재현 가능한 빌드를 만드는 도구. Hermes는 flake.nix로 Nix 패키징을 제공합니다."
+  },
+  {
+   "id": "exact-pinning",
+   "name_ko": "의존성 정확 고정",
+   "name_en": "Exact Pinning",
+   "category": "infra",
+   "definition": "pyproject.toml에서 의존성 버전을 `==`로 정확히 고정하는 정책. '어제는 됐는데 오늘 안 되는' 문제를 차단합니다."
+  },
+  {
+   "id": "lazy-deps",
+   "name_ko": "지연 설치 의존성",
+   "name_en": "Lazy Dependencies",
+   "category": "infra",
+   "definition": "무거운 선택적 의존성을 기본 설치에 포함하지 않고, 해당 기능을 처음 쓸 때 설치하는 전략. 기본 설치를 가볍게 유지합니다."
+  },
+  {
+   "id": "ci-cd",
+   "name_ko": "CI/CD",
+   "name_en": "CI/CD",
+   "category": "infra",
+   "definition": "코드 변경마다 자동으로 테스트(CI)하고 릴리스를 자동화(CD)하는 파이프라인. GitHub Actions로 구현되어 있습니다."
+  },
+  {
+   "id": "command-approval",
+   "name_ko": "명령 승인",
+   "name_en": "Command Approval",
+   "category": "security",
+   "definition": "위험한 셸 명령 실행 전 사용자 확인을 받는 계층. YOLO 모드로 완화할 수 있지만 하드라인 차단 목록은 우회 불가입니다."
+  },
+  {
+   "id": "yolo-mode",
+   "name_ko": "YOLO 모드",
+   "name_en": "YOLO Mode",
+   "category": "security",
+   "definition": "위험 명령의 수동 승인 절차를 생략하는 설정. 편의와 위험을 맞바꾸는 옵션이며, 그래도 하드라인 차단은 계속 적용됩니다."
+  },
+  {
+   "id": "hardline-blocklist",
+   "name_ko": "하드라인 차단 목록",
+   "name_en": "Hardline Blocklist",
+   "category": "security",
+   "definition": "`rm -rf /` 같은 파국적 명령을 어떤 설정으로도 우회할 수 없게 막는 최후의 필터."
+  },
+  {
+   "id": "untrusted-content",
+   "name_ko": "비신뢰 콘텐츠 원칙",
+   "name_en": "Untrusted Content",
+   "category": "security",
+   "definition": "외부 파일, 메모리 제공자 응답, MCP 서버 출력, 도구 결과를 모두 '신뢰할 수 없는 데이터'로 취급하는 Hermes 보안 원칙. 지시가 아니라 데이터로 다룹니다."
+  },
+  {
+   "id": "prompt-injection",
+   "name_ko": "프롬프트 인젝션",
+   "name_en": "Prompt Injection",
+   "category": "security",
+   "definition": "외부 콘텐츠(웹페이지, 파일, 도구 결과) 안에 심어진 지시문이 에이전트를 조종하려는 공격. 에이전트 시대의 대표적 보안 위협입니다."
+  },
+  {
+   "id": "tool-poisoning",
+   "name_ko": "도구 중독",
+   "name_en": "Tool Poisoning",
+   "category": "security",
+   "definition": "악성 MCP 서버가 도구 설명(스키마)에 숨은 지시를 심어 에이전트를 조종하는 프롬프트 인젝션의 변종."
+  },
+  {
+   "id": "secrets-env",
+   "name_ko": "비밀정보 분리 (.env)",
+   "name_en": "Secrets in .env",
+   "category": "security",
+   "definition": "API 키·토큰 같은 비밀은 .env에만, 일반 동작 설정은 config.yaml에 두는 Hermes 규칙. 비밀이 설정 파일·로그에 섞여 유출되는 것을 막습니다."
+  },
+  {
+   "id": "sanitization",
+   "name_ko": "새니타이즈",
+   "name_en": "Sanitization",
+   "category": "security",
+   "definition": "외부에서 온 텍스트에서 위험 요소(제어 문자, 비밀정보, 주입 시도)를 제거·중화하는 처리. 오류 메시지와 메모리 컨텍스트에 적용됩니다."
+  },
+  {
+   "id": "narrow-waist",
+   "name_ko": "좁은 허리 원칙",
+   "name_en": "Narrow Waist",
+   "category": "design",
+   "definition": "에이전트 코어와 모델 도구 스키마를 최소한으로 유지하고, 기능 확장은 가장자리(스킬, 플러그인, MCP)에서 하라는 Hermes 핵심 설계 철학. 모든 도구 스키마가 매 호출 전송되므로 코어 추가는 영구적 비용입니다."
+  },
+  {
+   "id": "footprint-ladder",
+   "name_ko": "풋프린트 사다리",
+   "name_en": "Footprint Ladder",
+   "category": "design",
+   "definition": "새 기능을 추가할 때 낮은 비용부터 시도하는 우선순위: ① 기존 코드 확장 → ② CLI 명령+스킬 → ③ 서비스 게이트 도구(check_fn) → ④ 플러그인 → ⑤ MCP 서버 → ⑥ 새 코어 도구(최후)."
+  },
+  {
+   "id": "config-yaml",
+   "name_ko": "config.yaml",
+   "name_en": "config.yaml",
+   "category": "design",
+   "definition": "타임아웃·임계값·기능 플래그 등 모든 동작 설정이 들어가는 파일. 비밀(.env)과 분리하는 것이 규칙입니다."
+  },
+  {
+   "id": "behavior-contract",
+   "name_ko": "행위 계약 테스트",
+   "name_en": "Behavior Contract Tests",
+   "category": "design",
+   "definition": "'두 데이터가 어떤 관계여야 한다'는 불변식을 검증하는 테스트 스타일. 현재 값을 얼려 두는 변경 감지 테스트의 반대말로, Hermes가 권장하는 방식입니다."
+  },
+  {
+   "id": "change-detector",
+   "name_ko": "변경 감지 테스트 (안티패턴)",
+   "name_en": "Change-Detector Tests",
+   "category": "design",
+   "definition": "모델 목록·설정 버전 같은 현재 값을 그대로 박아 두어, 정당한 변경에도 깨지는 테스트 안티패턴. Hermes에서 명시적으로 금지됩니다."
+  },
+  {
+   "id": "e2e-validation",
+   "name_ko": "E2E 검증",
+   "name_en": "E2E Validation",
+   "category": "design",
+   "definition": "모의(mock)가 아닌 실제 import·파일·네트워크 경로로 기능을 검증하는 것. 설정 전파, 보안 경계, 원격 백엔드 관련 변경에 필수입니다."
+  },
+  {
+   "id": "escape-hatch",
+   "name_ko": "탈출구 패턴",
+   "name_en": "Escape Hatch",
+   "category": "design",
+   "definition": "고수준 추상화가 못 다루는 예외 상황을 위해 저수준 원시 접근을 제한적으로 열어 두는 설계 패턴. browser_cdp 도구가 대표 사례입니다."
+  },
+  {
+   "id": "conventional-commits",
+   "name_ko": "컨벤셔널 커밋",
+   "name_en": "Conventional Commits",
+   "category": "design",
+   "definition": "`fix(scope):`, `feat(scope):`처럼 커밋 메시지에 유형과 범위를 규격화해 적는 관례. 변경 이력 자동 분류와 릴리스 노트 생성을 돕습니다."
+  },
+  {
+   "id": "cron",
+   "name_ko": "크론 (예약 작업)",
+   "name_en": "Cron / Scheduled Tasks",
+   "category": "ops",
+   "definition": "자연어로 등록하는 예약 작업 시스템(`cron/`). \"매일 아침 9시에 뉴스 요약해 줘\" 같은 요청을 스케줄로 저장하고 때가 되면 에이전트 턴을 실행합니다."
+  },
+  {
+   "id": "cron-scheduler",
+   "name_ko": "크론 스케줄러",
+   "name_en": "Cron Scheduler",
+   "category": "ops",
+   "definition": "등록된 작업의 다음 실행 시각을 계산하고 시간이 되면 실행을 트리거하는 내부 엔진(`cron/scheduler.py`)."
+  },
+  {
+   "id": "plugin",
+   "name_ko": "플러그인",
+   "name_en": "Plugin",
+   "category": "ops",
+   "definition": "코어를 수정하지 않고 기능을 확장하는 외부 모듈(`plugins/`, `~/.hermes/plugins/`). 메모리 제공자, 모델 제공자, 컨텍스트 엔진, 관측 도구 등이 플러그인으로 제공됩니다."
+  },
+  {
+   "id": "plugin-hook",
+   "name_ko": "플러그인 훅",
+   "name_en": "Plugin Hooks",
+   "category": "ops",
+   "definition": "코어가 정해진 시점(도구 실행 전후, 턴 종료 등)에 플러그인 코드를 호출해 주는 연결 지점. 구체적 소비자 없는 훅 추가는 '투기적 인프라'로 금지됩니다."
+  },
+  {
+   "id": "observability",
+   "name_ko": "관측성",
+   "name_en": "Observability",
+   "category": "ops",
+   "definition": "시스템 내부에서 무슨 일이 일어나는지 로그·메트릭·트레이스로 들여다보는 능력. Hermes에서는 플러그인으로 제공되며, 옵트인 없는 외부 전송은 금지됩니다."
+  },
+  {
+   "id": "acp-adapter",
+   "name_ko": "ACP 어댑터",
+   "name_en": "ACP Adapter",
+   "category": "ops",
+   "definition": "Hermes를 ACP 호환 에이전트로 노출하는 어댑터(`acp_adapter/`). 프로토콜 메시지는 stdout으로, 로그는 stderr로 엄격히 분리하는 것이 핵심 규율입니다."
+  },
+  {
+   "id": "i18n",
+   "name_ko": "국제화 (i18n)",
+   "name_en": "Internationalization",
+   "category": "ops",
+   "definition": "UI 문자열을 여러 언어로 제공하는 체계(`agent/i18n.py`). README도 중국어·우르두어 번역본이 있습니다."
+  },
+  {
+   "id": "batch-runner",
+   "name_ko": "배치 러너",
+   "name_en": "Batch Runner",
+   "category": "ops",
+   "definition": "여러 작업을 병렬로 처리하는 실행기(`batch_runner.py`). 연구·평가용 대량 실행에 사용됩니다."
+  }
+ ],
+ "edges": [
+  {
+   "source": "llm",
+   "target": "transformer",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "llm",
+   "target": "token",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "llm",
+   "target": "tool-calling",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "transformer",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "transformer",
+   "target": "attention",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "attention",
+   "target": "transformer",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "attention",
+   "target": "context-window",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "token",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "token",
+   "target": "context-window",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "token",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-window",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "context-window",
+   "target": "token",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-window",
+   "target": "context-compression",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-window",
+   "target": "lost-in-the-middle",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "system-prompt",
+   "target": "prompt",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "system-prompt",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "system-prompt",
+   "target": "soul-md",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "system-prompt",
+   "target": "system-prompt-tiers",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "system-prompt",
+   "target": "context-compression",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "prompt",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "prompt",
+   "target": "system-prompt",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "prompt",
+   "target": "token",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "prompt-caching",
+   "target": "prompt",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "prompt-caching",
+   "target": "kv-cache",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "prompt-caching",
+   "target": "role-alternation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "prompt-caching",
+   "target": "context-compression",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "kv-cache",
+   "target": "attention",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "kv-cache",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sampling",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "sampling",
+   "target": "self-consistency",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sampling",
+   "target": "token",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "reasoning-model",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "reasoning-model",
+   "target": "react",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hallucination",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "hallucination",
+   "target": "grounding",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hallucination",
+   "target": "tool-calling",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "grounding",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "grounding",
+   "target": "hallucination",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "grounding",
+   "target": "retrieval",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "grounding",
+   "target": "react",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "auxiliary-model",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "auxiliary-model",
+   "target": "context-compression",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "auxiliary-model",
+   "target": "curator",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "embedding",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "embedding",
+   "target": "vector-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agent",
+   "target": "llm",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agent",
+   "target": "tool-calling-loop",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agent",
+   "target": "aiagent",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agent",
+   "target": "tool-calling",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "aiagent",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "aiagent",
+   "target": "run-conversation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "aiagent",
+   "target": "tool-calling-loop",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-calling",
+   "target": "tool-schema",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling",
+   "target": "dispatch",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling",
+   "target": "react",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling",
+   "target": "llm",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "tool-calling-loop",
+   "target": "tool-calling",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-calling-loop",
+   "target": "iteration-budget",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling-loop",
+   "target": "role-alternation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-calling-loop",
+   "target": "run-conversation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "run-conversation",
+   "target": "tool-calling-loop",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "run-conversation",
+   "target": "aiagent",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "run-conversation",
+   "target": "turn",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "run-conversation",
+   "target": "grace-call",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "run-conversation",
+   "target": "context-compression",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "run-conversation",
+   "target": "dispatch",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "turn",
+   "target": "tool-calling-loop",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "turn",
+   "target": "role-alternation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "turn",
+   "target": "session",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "iteration-budget",
+   "target": "tool-calling-loop",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "iteration-budget",
+   "target": "grace-call",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "iteration-budget",
+   "target": "delegation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "iteration-budget",
+   "target": "subagent",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "grace-call",
+   "target": "iteration-budget",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "grace-call",
+   "target": "run-conversation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "react",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "react",
+   "target": "tool-calling-loop",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "react",
+   "target": "grounding",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "react",
+   "target": "reasoning-model",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "react",
+   "target": "tool-calling",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "role-alternation",
+   "target": "tool-calling-loop",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "role-alternation",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "role-alternation",
+   "target": "message-protocol",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "message-protocol",
+   "target": "tool-calling",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "message-protocol",
+   "target": "role-alternation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "message-protocol",
+   "target": "tool-call-id",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-call-id",
+   "target": "message-protocol",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-call-id",
+   "target": "parallel-tool-calls",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "parallel-tool-calls",
+   "target": "tool-calling",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "parallel-tool-calls",
+   "target": "tool-call-id",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retry-fallback",
+   "target": "run-conversation",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "retry-fallback",
+   "target": "provider",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retry-fallback",
+   "target": "credential-pool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "provider",
+   "target": "llm",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "provider",
+   "target": "retry-fallback",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "provider",
+   "target": "model-metadata",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "provider",
+   "target": "moa",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "model-metadata",
+   "target": "provider",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "model-metadata",
+   "target": "context-window",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "credential-pool",
+   "target": "provider",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "credential-pool",
+   "target": "retry-fallback",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "moa",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "moa",
+   "target": "proposer-aggregator",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "moa",
+   "target": "ensemble",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "moa",
+   "target": "moe",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "moa",
+   "target": "llm",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "proposer-aggregator",
+   "target": "moa",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "proposer-aggregator",
+   "target": "llm-as-judge",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "ensemble",
+   "target": "moa",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "ensemble",
+   "target": "self-consistency",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "self-consistency",
+   "target": "ensemble",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "self-consistency",
+   "target": "sampling",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "self-consistency",
+   "target": "moa",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "llm-as-judge",
+   "target": "ensemble",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "llm-as-judge",
+   "target": "proposer-aggregator",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "moe",
+   "target": "moa",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "subagent",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "subagent",
+   "target": "delegation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "subagent",
+   "target": "iteration-budget",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "delegation",
+   "target": "subagent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "delegation",
+   "target": "kanban",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "kanban",
+   "target": "delegation",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "kanban",
+   "target": "cron",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool",
+   "target": "tool-calling",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool",
+   "target": "tool-schema",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool",
+   "target": "handler",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool",
+   "target": "toolset",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-schema",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-schema",
+   "target": "json-schema",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-schema",
+   "target": "narrow-waist",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "json-schema",
+   "target": "tool-schema",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-registry",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-registry",
+   "target": "self-registration",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-registry",
+   "target": "dispatch",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-registry",
+   "target": "check-fn",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-registry",
+   "target": "handler",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "self-registration",
+   "target": "tool-registry",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "self-registration",
+   "target": "ast-discovery",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "ast-discovery",
+   "target": "self-registration",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "dispatch",
+   "target": "tool-registry",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "dispatch",
+   "target": "handler",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "dispatch",
+   "target": "error-envelope",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "dispatch",
+   "target": "result-normalization",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "handler",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "handler",
+   "target": "dispatch",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "result-normalization",
+   "target": "dispatch",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "result-normalization",
+   "target": "error-envelope",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "error-envelope",
+   "target": "dispatch",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "error-envelope",
+   "target": "result-normalization",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "check-fn",
+   "target": "tool-registry",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "check-fn",
+   "target": "footprint-ladder",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "check-fn",
+   "target": "toolset",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "toolset",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "toolset",
+   "target": "core-tools",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "core-tools",
+   "target": "toolset",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "core-tools",
+   "target": "narrow-waist",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "terminal-tool",
+   "target": "core-tools",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "terminal-tool",
+   "target": "execution-environment",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "terminal-tool",
+   "target": "command-approval",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "file-tools",
+   "target": "core-tools",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "file-tools",
+   "target": "terminal-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "browser-tool",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "browser-tool",
+   "target": "cdp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "browser-tool",
+   "target": "accessibility-tree",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "browser-tool",
+   "target": "cloud-browser",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "browser-cdp-tool",
+   "target": "browser-tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "browser-cdp-tool",
+   "target": "cdp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "browser-cdp-tool",
+   "target": "escape-hatch",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "vision-tools",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "vision-tools",
+   "target": "auxiliary-model",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "web-search-tool",
+   "target": "core-tools",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "web-search-tool",
+   "target": "grounding",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "delegate-tool",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "delegate-tool",
+   "target": "subagent",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "delegate-tool",
+   "target": "delegation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill-tool",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "skill-tool",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill-tool",
+   "target": "progressive-disclosure",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "computer-use",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "computer-use",
+   "target": "browser-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "voice-mode",
+   "target": "tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "voice-mode",
+   "target": "gateway",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "max-result-size",
+   "target": "result-normalization",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "max-result-size",
+   "target": "context-window",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engineering",
+   "target": "system-prompt",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engineering",
+   "target": "context-compression",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engineering",
+   "target": "progressive-disclosure",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engineering",
+   "target": "context-window",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "context-engineering",
+   "target": "system-prompt-tiers",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "system-prompt-tiers",
+   "target": "system-prompt",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "system-prompt-tiers",
+   "target": "soul-md",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "system-prompt-tiers",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "soul-md",
+   "target": "system-prompt-tiers",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "soul-md",
+   "target": "persona",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "persona",
+   "target": "soul-md",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "context-compression",
+   "target": "context-engineering",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "context-compression",
+   "target": "summarization",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-compression",
+   "target": "head-tail-protection",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-compression",
+   "target": "compression-lineage",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-compression",
+   "target": "prompt-caching",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-compression",
+   "target": "context-window",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "context-compression",
+   "target": "auxiliary-model",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "summarization",
+   "target": "context-compression",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "summarization",
+   "target": "structured-summary",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "summarization",
+   "target": "tool-output-pruning",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "structured-summary",
+   "target": "summarization",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "head-tail-protection",
+   "target": "context-compression",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "head-tail-protection",
+   "target": "lost-in-the-middle",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "head-tail-protection",
+   "target": "token-budget-tail",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "token-budget-tail",
+   "target": "head-tail-protection",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-output-pruning",
+   "target": "summarization",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-output-pruning",
+   "target": "max-result-size",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lost-in-the-middle",
+   "target": "context-window",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "lost-in-the-middle",
+   "target": "head-tail-protection",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "compression-lineage",
+   "target": "context-compression",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "compression-lineage",
+   "target": "session",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "compression-lineage",
+   "target": "sessiondb",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engine",
+   "target": "context-engineering",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "context-engine",
+   "target": "context-compression",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-engine",
+   "target": "plugin",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "context-file",
+   "target": "system-prompt-tiers",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "context-file",
+   "target": "soul-md",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "compression-cooldown",
+   "target": "context-compression",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "self-improving-agent",
+   "target": "agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "self-improving-agent",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "self-improving-agent",
+   "target": "curator",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "self-improving-agent",
+   "target": "memory",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory",
+   "target": "self-improving-agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "memory",
+   "target": "procedural-memory",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory",
+   "target": "semantic-memory",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory",
+   "target": "episodic-memory",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory",
+   "target": "memory-provider",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "procedural-memory",
+   "target": "memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "procedural-memory",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "semantic-memory",
+   "target": "memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "semantic-memory",
+   "target": "memory-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "semantic-memory",
+   "target": "memory-provider",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "episodic-memory",
+   "target": "memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "episodic-memory",
+   "target": "session-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "episodic-memory",
+   "target": "sessiondb",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill",
+   "target": "procedural-memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "skill",
+   "target": "skill-md",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill",
+   "target": "progressive-disclosure",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill",
+   "target": "curator",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill",
+   "target": "skills-hub",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "skill",
+   "target": "self-improving-agent",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "skill-md",
+   "target": "skill",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "skill-md",
+   "target": "frontmatter",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "frontmatter",
+   "target": "skill-md",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "frontmatter",
+   "target": "progressive-disclosure",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "progressive-disclosure",
+   "target": "context-engineering",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "progressive-disclosure",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "progressive-disclosure",
+   "target": "frontmatter",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "progressive-disclosure",
+   "target": "skill-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "curator",
+   "target": "self-improving-agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "curator",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "curator",
+   "target": "archive",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "curator",
+   "target": "pinning",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "curator",
+   "target": "auxiliary-model",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "archive",
+   "target": "curator",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "pinning",
+   "target": "curator",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "skills-hub",
+   "target": "skill",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "skills-hub",
+   "target": "plugin",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "self-reflection",
+   "target": "self-improving-agent",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "self-reflection",
+   "target": "learn-prompt",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "learn-prompt",
+   "target": "self-reflection",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "learn-prompt",
+   "target": "skill",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory-provider",
+   "target": "memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "memory-provider",
+   "target": "honcho",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory-provider",
+   "target": "memory-manager",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory-provider",
+   "target": "plugin",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory-manager",
+   "target": "memory-provider",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "memory-manager",
+   "target": "system-prompt-tiers",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "memory-tool",
+   "target": "semantic-memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "honcho",
+   "target": "memory-provider",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "honcho",
+   "target": "dialectic-api",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "honcho",
+   "target": "theory-of-mind",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "dialectic-api",
+   "target": "honcho",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "dialectic-api",
+   "target": "theory-of-mind",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "theory-of-mind",
+   "target": "honcho",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "theory-of-mind",
+   "target": "user-modeling",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "user-modeling",
+   "target": "memory",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "user-modeling",
+   "target": "theory-of-mind",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "user-modeling",
+   "target": "dialectic-api",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sessiondb",
+   "target": "sqlite",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sessiondb",
+   "target": "session",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sessiondb",
+   "target": "wal",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sessiondb",
+   "target": "fts5",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sqlite",
+   "target": "sessiondb",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sqlite",
+   "target": "wal",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sqlite",
+   "target": "fts5",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "wal",
+   "target": "sqlite",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "wal",
+   "target": "sessiondb",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "session",
+   "target": "sessiondb",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "session",
+   "target": "turn",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "session",
+   "target": "compression-lineage",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "session",
+   "target": "context-compression",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "fts",
+   "target": "fts5",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts",
+   "target": "inverted-index",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts",
+   "target": "retrieval",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts5",
+   "target": "fts",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "fts5",
+   "target": "sqlite",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "fts5",
+   "target": "bm25",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts5",
+   "target": "tokenizer",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts5",
+   "target": "external-content",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts5",
+   "target": "trigram",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts5",
+   "target": "session-search",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "inverted-index",
+   "target": "fts",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "inverted-index",
+   "target": "tokenizer",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tokenizer",
+   "target": "fts5",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tokenizer",
+   "target": "unicode61",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tokenizer",
+   "target": "trigram",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tokenizer",
+   "target": "llm",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "unicode61",
+   "target": "tokenizer",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "unicode61",
+   "target": "fts5",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "trigram",
+   "target": "tokenizer",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "trigram",
+   "target": "unicode61",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "bm25",
+   "target": "fts5",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "bm25",
+   "target": "tf-idf",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tf-idf",
+   "target": "bm25",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "external-content",
+   "target": "fts5",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "external-content",
+   "target": "fts-trigger",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "fts-trigger",
+   "target": "external-content",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "fts-trigger",
+   "target": "sqlite",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "session-search",
+   "target": "fts5",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "session-search",
+   "target": "episodic-memory",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retrieval",
+   "target": "fts",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retrieval",
+   "target": "vector-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retrieval",
+   "target": "agentic-rag",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "retrieval",
+   "target": "llm",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "vector-search",
+   "target": "retrieval",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "vector-search",
+   "target": "embedding",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "vector-search",
+   "target": "hybrid-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hybrid-search",
+   "target": "retrieval",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "hybrid-search",
+   "target": "vector-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hybrid-search",
+   "target": "bm25",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agentic-rag",
+   "target": "retrieval",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "agentic-rag",
+   "target": "session-search",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "agentic-rag",
+   "target": "tool-calling",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "gateway",
+   "target": "platform-adapter",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "gateway",
+   "target": "gateway-session",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "gateway",
+   "target": "delivery",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "platform-adapter",
+   "target": "gateway",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "platform-adapter",
+   "target": "delivery",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "gateway-session",
+   "target": "gateway",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "gateway-session",
+   "target": "session",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "gateway-session",
+   "target": "unified-inbox",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "delivery",
+   "target": "gateway",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "delivery",
+   "target": "platform-adapter",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "unified-inbox",
+   "target": "gateway-session",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "slash-command",
+   "target": "gateway",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "slash-command",
+   "target": "moa",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hermes-cli",
+   "target": "repl",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hermes-cli",
+   "target": "aiagent",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "repl",
+   "target": "hermes-cli",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tui",
+   "target": "tui-gateway",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tui",
+   "target": "hermes-cli",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tui-gateway",
+   "target": "tui",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tui-gateway",
+   "target": "json-rpc",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "desktop-app",
+   "target": "tui-gateway",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "web-dashboard",
+   "target": "plugin",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "profile",
+   "target": "hermes-home",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "hermes-home",
+   "target": "profile",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "hermes-home",
+   "target": "config-yaml",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp",
+   "target": "mcp-server",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp",
+   "target": "json-rpc",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp",
+   "target": "acp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp",
+   "target": "nxm-problem",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-server",
+   "target": "mcp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "mcp-server",
+   "target": "mcp-client",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-server",
+   "target": "mcp-primitives",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-server",
+   "target": "tool-registry",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "mcp-client",
+   "target": "mcp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "mcp-client",
+   "target": "mcp-transport",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-client",
+   "target": "mcp-server",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "mcp-primitives",
+   "target": "mcp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "mcp-primitives",
+   "target": "tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-transport",
+   "target": "mcp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "mcp-transport",
+   "target": "stdio",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-transport",
+   "target": "sse",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "mcp-transport",
+   "target": "streamable-http",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "stdio",
+   "target": "mcp-transport",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "sse",
+   "target": "mcp-transport",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "sse",
+   "target": "streamable-http",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "streamable-http",
+   "target": "mcp-transport",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "streamable-http",
+   "target": "sse",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "json-rpc",
+   "target": "mcp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "json-rpc",
+   "target": "acp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "json-rpc",
+   "target": "lsp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "acp",
+   "target": "mcp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "acp",
+   "target": "json-rpc",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lsp",
+   "target": "nxm-problem",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lsp",
+   "target": "json-rpc",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lsp",
+   "target": "mcp",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "lsp",
+   "target": "acp",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "nxm-problem",
+   "target": "mcp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "nxm-problem",
+   "target": "lsp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "capability-negotiation",
+   "target": "mcp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "cdp",
+   "target": "browser-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cdp",
+   "target": "websocket",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cdp",
+   "target": "cdp-domain",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cdp",
+   "target": "headless",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "websocket",
+   "target": "cdp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cdp-domain",
+   "target": "cdp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "headless",
+   "target": "cdp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "headless",
+   "target": "cloud-browser",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "accessibility-tree",
+   "target": "browser-tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "cloud-browser",
+   "target": "browser-tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "cloud-browser",
+   "target": "cdp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "execution-environment",
+   "target": "terminal-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "execution-environment",
+   "target": "spawn-per-call",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "execution-environment",
+   "target": "sandbox",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sandbox",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "sandbox",
+   "target": "container",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sandbox",
+   "target": "vm-isolation",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sandbox",
+   "target": "namespace",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "spawn-per-call",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "spawn-per-call",
+   "target": "session-snapshot",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "session-snapshot",
+   "target": "spawn-per-call",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "container",
+   "target": "sandbox",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "container",
+   "target": "namespace",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "container",
+   "target": "cgroups",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "container",
+   "target": "container-image",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "container",
+   "target": "docker-backend",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "namespace",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "cgroups",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "cgroups",
+   "target": "namespace",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "container-image",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "container-image",
+   "target": "reproducibility",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "docker-backend",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "docker-backend",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "ssh-backend",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "ssh-backend",
+   "target": "file-sync",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "modal-backend",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "modal-backend",
+   "target": "serverless",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "daytona-backend",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "daytona-backend",
+   "target": "sandbox",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "singularity-backend",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "singularity-backend",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "singularity-backend",
+   "target": "rootless",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "rootless",
+   "target": "container",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "rootless",
+   "target": "singularity-backend",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "vm-isolation",
+   "target": "sandbox",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "vm-isolation",
+   "target": "container",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "serverless",
+   "target": "modal-backend",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "file-sync",
+   "target": "execution-environment",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "file-sync",
+   "target": "ssh-backend",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "reproducibility",
+   "target": "container-image",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "reproducibility",
+   "target": "nix",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "reproducibility",
+   "target": "exact-pinning",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "nix",
+   "target": "reproducibility",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "exact-pinning",
+   "target": "reproducibility",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "exact-pinning",
+   "target": "lazy-deps",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lazy-deps",
+   "target": "exact-pinning",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "lazy-deps",
+   "target": "footprint-ladder",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "ci-cd",
+   "target": "reproducibility",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "command-approval",
+   "target": "terminal-tool",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "command-approval",
+   "target": "yolo-mode",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "command-approval",
+   "target": "hardline-blocklist",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "yolo-mode",
+   "target": "command-approval",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "yolo-mode",
+   "target": "hardline-blocklist",
+   "type": "MENTIONS"
+  },
+  {
+   "source": "hardline-blocklist",
+   "target": "command-approval",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "untrusted-content",
+   "target": "prompt-injection",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "untrusted-content",
+   "target": "mcp-server",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "untrusted-content",
+   "target": "memory-provider",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "prompt-injection",
+   "target": "untrusted-content",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "prompt-injection",
+   "target": "tool-poisoning",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "tool-poisoning",
+   "target": "prompt-injection",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "tool-poisoning",
+   "target": "mcp-server",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "secrets-env",
+   "target": "config-yaml",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "sanitization",
+   "target": "untrusted-content",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "sanitization",
+   "target": "error-envelope",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "narrow-waist",
+   "target": "footprint-ladder",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "narrow-waist",
+   "target": "tool-schema",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "narrow-waist",
+   "target": "core-tools",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "footprint-ladder",
+   "target": "narrow-waist",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "footprint-ladder",
+   "target": "check-fn",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "footprint-ladder",
+   "target": "plugin",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "footprint-ladder",
+   "target": "mcp",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "config-yaml",
+   "target": "secrets-env",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "config-yaml",
+   "target": "hermes-home",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "behavior-contract",
+   "target": "change-detector",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "change-detector",
+   "target": "behavior-contract",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "e2e-validation",
+   "target": "behavior-contract",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "escape-hatch",
+   "target": "browser-cdp-tool",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "escape-hatch",
+   "target": "narrow-waist",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "conventional-commits",
+   "target": "ci-cd",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cron",
+   "target": "cron-scheduler",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cron",
+   "target": "sessiondb",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "cron-scheduler",
+   "target": "cron",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "plugin",
+   "target": "plugin-hook",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "plugin",
+   "target": "memory-provider",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "plugin",
+   "target": "footprint-ladder",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "plugin-hook",
+   "target": "plugin",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "observability",
+   "target": "plugin",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "acp-adapter",
+   "target": "acp",
+   "type": "SUBCONCEPT_OF"
+  },
+  {
+   "source": "acp-adapter",
+   "target": "stdio",
+   "type": "RELATED_TO"
+  },
+  {
+   "source": "batch-runner",
+   "target": "aiagent",
+   "type": "RELATED_TO"
+  }
+ ]
+}
