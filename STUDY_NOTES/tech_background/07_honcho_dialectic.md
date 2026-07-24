@@ -56,3 +56,7 @@
 - provider 컨텍스트는 egress 경계에서 살균됩니다(`context_engine.sanitize_memory_context`,
   [07_prompt_context.md](../07_prompt_context.md)) — 외부로 나가는 사용자 데이터의
   민감정보를 가립니다.
+
+## 더 읽어보기 (공식 자료)
+
+- Honcho 프로젝트: <https://honcho.dev/> (Plastic Labs)

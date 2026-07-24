@@ -49,7 +49,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 도구)로 들어갑니다.
 
 코어 도구 목록은 `toolsets.py`의 `_HERMES_CORE_TOOLS`입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/toolsets.py" lines="31-81" />
+[`toolsets.py` 31-81행](../toolsets.py#L31-L81)
 대표 항목(31-81행):
 - 웹: `web_search`, `web_extract`
 - 터미널/프로세스: `terminal`, `process`
@@ -75,7 +75,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 ## 3. 자기 등록(self-registration) 메커니즘
 
 레지스트리의 핵심 아이디어(파일 상단 docstring):
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/registry.py" lines="1-15" />
+[`tools/registry.py` 1-15행](../tools/registry.py#L1-L15)
 ```
 각 도구 파일은 모듈 레벨에서 registry.register()를 호출해 자신의
 스키마·핸들러·소속 toolset·가용성 체크를 선언한다. model_tools.py는 자체
@@ -94,7 +94,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 
 레지스트리는 "자기 등록"만으로는 부족합니다. 등록하려면 먼저 그 모듈이 **import**
 되어야 합니다. 그 일을 하는 함수가 `discover_builtin_tools`입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/registry.py" lines="67-84" />
+[`tools/registry.py` 67-84행](../tools/registry.py#L67-L84)
 ```python
 def discover_builtin_tools(tools_dir: Optional[Path] = None) -> List[str]:
     """Import built-in self-registering tool modules and return their module names."""
@@ -130,7 +130,7 @@ def discover_builtin_tools(tools_dir: Optional[Path] = None) -> List[str]:
 ## 5. ToolEntry와 register()의 매개변수
 
 등록된 도구 하나는 `ToolEntry`로 표현됩니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/registry.py" lines="87-116" />
+[`tools/registry.py` 87-116행](../tools/registry.py#L87-L116)
 `__slots__`(90-94행)로 메모리를 아끼며, 필드는:
 `name`, `toolset`, `schema`, `handler`, `check_fn`, `requires_env`, `is_async`,
 `description`, `emoji`, `max_result_size_chars`, `dynamic_schema_overrides`.
@@ -153,7 +153,7 @@ Assistant 도구는 토큰이 설정돼 있을 때만, Docker 백엔드 도구�
 개념이며, 조건이 안 맞으면 스키마에서 아예 빠져 **좁은 허리**를 지킵니다.
 
 그런데 이 체크는 비쌉니다(외부 프로세스 프로브). 그래서 TTL 캐시가 붙어 있습니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/registry.py" lines="119-151" />
+[`tools/registry.py` 119-151행](../tools/registry.py#L119-L151)
 - `_CHECK_FN_TTL_SECONDS = 30.0` (143행): 결과를 ~30초 캐시. `hermes tools`로 켠
   설정이 한두 턴 안에 반영되도록.
 - **플래키(flaky) 억제** (130-140행, `_CHECK_FN_FAILURE_GRACE_SECONDS = 60.0`):
@@ -170,7 +170,7 @@ Assistant 도구는 토큰이 설정돼 있을 때만, Docker 백엔드 도구�
 ## 7. 디스패치: registry.dispatch와 handle_function_call
 
 ### 7-1. registry.dispatch — 실제 실행
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/registry.py" lines="614-644" />
+[`tools/registry.py` 614-644행](../tools/registry.py#L614-L644)
 ```python
 def dispatch(self, name: str, args: dict, **kwargs) -> str | dict:
     entry = self.get_entry(name)
@@ -197,13 +197,13 @@ def dispatch(self, name: str, args: dict, **kwargs) -> str | dict:
   모델에게 구조적 잡음으로 전달되지 않게 합니다.
 
 ### 7-2. handle_function_call — 루프와 레지스트리 사이
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/model_tools.py" lines="1069-1084" />
+[`model_tools.py` 1069-1084행](../model_tools.py#L1069-L1084)
 `model_tools.handle_function_call`(1069행)이 대화 루프와 레지스트리 사이의
 공식 관문입니다. 인자에 `task_id`, `session_id`, `turn_id`, `enabled_tools`,
 `enabled_toolsets` 등이 있어, 세션/서브에이전트 격리와 도구 범위 지정을 담당합니다.
 
 내부에서 실제로 `registry.dispatch`를 호출합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/model_tools.py" lines="1303-1322" />
+[`model_tools.py` 1303-1322행](../model_tools.py#L1303-L1322)
 - `execute_code`는 서브에이전트가 부모의 도구 집합을 덮어쓰지 못하도록
   호출자가 준 `enabled_tools`를 우선 사용(1304-1314행).
 - 그 외 도구는 `task_id`/`session_id`/`user_task`를 dispatch로 전달(1316-1322행).

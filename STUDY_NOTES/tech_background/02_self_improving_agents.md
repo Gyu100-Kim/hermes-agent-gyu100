@@ -49,7 +49,7 @@
 
 - **스킬(SKILL.md)**: 절차적 지식을 마크다운으로 저장. frontmatter의 60자 설명만
   시스템 프롬프트에 색인되고 본문은 `skill_view`로 지연 로드 → progressive disclosure.
-  실물 예: <ref_file file="/home/ubuntu/repos/hermes-agent-gyu100/skills/creative/ascii-art/SKILL.md" />
+  실물 예: [`skills/creative/ascii-art/SKILL.md`](../../skills/creative/ascii-art/SKILL.md)
 - **`/learn`**: `agent/learn_prompt.py`가 경험/문서/코드를 스킬로 정제하는 프롬프트를
   만듭니다. 새 코어 도구 없이 기존 도구로 수행(18-22행) — 자기개선을 "가장자리"에서
   구현.
@@ -59,3 +59,7 @@
 - **메모리**: `agent/memory_manager.py`가 `MEMORY.md`/`USER.md` 및 외부 provider를
   오케스트레이션(사실/취향 축).
 - **가시화**: `agent/learning_graph.py`가 배운 스킬·기억을 그래프로 보여줍니다.
+
+## 더 읽어보기 (공식 자료)
+
+- Voyager 논문(스킬 라이브러리): <https://arxiv.org/abs/2305.16291>

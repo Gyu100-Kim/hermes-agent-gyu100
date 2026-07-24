@@ -52,7 +52,7 @@ Hermes는 위 개념을 정면으로 구현합니다.
 
 - **도구 호출 루프**: [04_agent_loop.md](../04_agent_loop.md)에서 본
   `agent/conversation_loop.py`의 `while` 루프가 곧 tool-calling loop입니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/conversation_loop.py" lines="1009-1009" />
+  [`agent/conversation_loop.py` 1009행](../../agent/conversation_loop.py#L1009)
 - **반복 예산으로 long-horizon 제어**: `max_iterations=90`(`run_agent.py` 434행)과
   `IterationBudget`가 무한 루프/비용 폭주를 막습니다.
 - **구조화된 도구 스키마**: [05_tools.md](../05_tools.md)의 `tools/registry.py`가
@@ -65,3 +65,9 @@ Hermes는 위 개념을 정면으로 구현합니다.
 - **병렬/역할 교대 규칙**: `AGENTS.md`는 엄격한 역할 교대(두 개의 같은 역할 연속
   금지)와 프롬프트 캐시 보존을 요구하며, 이는 tool-calling을 안정적으로 굴리기 위한
   실무 제약입니다.
+
+## 더 읽어보기 (공식 자료)
+
+- ReAct 논문: <https://arxiv.org/abs/2210.03629>
+- Toolformer 논문: <https://arxiv.org/abs/2302.04761>
+- OpenAI Function Calling 가이드: <https://platform.openai.com/docs/guides/function-calling>

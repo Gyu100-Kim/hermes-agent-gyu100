@@ -32,7 +32,7 @@ LLM은 **컨텍스트(context)** — 즉 매번 함께 보내는 텍스트 — �
   프롬프트를 재구성하면 prefix가 달라져 캐시가 **무효화**되고 비용이 배가됩니다.
 
 그래서 `agent/system_prompt.py`의 첫 문장이 핵심 규칙을 못 박습니다:
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/system_prompt.py" lines="1-9" />
+[`agent/system_prompt.py` 1-9행](../agent/system_prompt.py#L1-L9)
 ```
 The agent's system prompt is built once per session and reused across all
 turns — only context compression triggers a rebuild. This keeps the
@@ -49,7 +49,7 @@ upstream prefix cache warm.
 ## 2. 3계층 프롬프트: stable / context / volatile
 
 시스템 프롬프트는 세 계층을 `\n\n`으로 이어 붙여 만듭니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/system_prompt.py" lines="10-20" />
+[`agent/system_prompt.py` 10-20행](../agent/system_prompt.py#L10-L20)
 (`agent/system_prompt.py` 10-20행)
 
 - **stable(안정 계층)**: 정체성(SOUL.md 또는 `DEFAULT_AGENT_IDENTITY`), 도구
@@ -78,7 +78,7 @@ upstream prefix cache warm.
 
 `agent/prompt_builder.py`는 프롬프트 조각을 만드는 **상태 없는(stateless)** 헬퍼
 모음입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/prompt_builder.py" lines="1-5" />
+[`agent/prompt_builder.py` 1-5행](../agent/prompt_builder.py#L1-L5)
 ```
 System prompt assembly -- identity, platform hints, skills index, context files.
 All functions are stateless. AIAgent._build_system_prompt() calls these ...
@@ -86,7 +86,7 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
 (`agent/prompt_builder.py` 1-5행)
 
 여기서 특히 중요한 것이 **컨텍스트 파일 위협 스캔**입니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/prompt_builder.py" lines="37-45" />
+[`agent/prompt_builder.py` 37-45행](../agent/prompt_builder.py#L37-L45)
 (37-45행) — `AGENTS.md`, `.cursorrules`, `SOUL.md` 같은 파일은 시스템 프롬프트에
 그대로 주입되는데, 만약 누군가 그 파일에 **프롬프트 인젝션(promptware)** 을 심어두면
 에이전트가 탈취될 수 있습니다. 그래서 주입 전에 `tools/threat_patterns.py`의 공통
@@ -103,7 +103,7 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
 
 대화가 길어져 모델의 토큰 한도에 근접하면, 중간 내용을 **요약본**으로 갈아끼워
 대화를 이어갑니다. 담당은 `agent/context_compressor.py`(약 5,400줄).
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/context_compressor.py" lines="1-17" />
+[`agent/context_compressor.py` 1-17행](../agent/context_compressor.py#L1-L17)
 (`agent/context_compressor.py` 1-17행) 핵심 아이디어:
 
 - **보조 모델 사용**(3-4행): 요약은 값싸고 빠른 **보조(auxiliary) 모델**에게 시킵니다.
@@ -132,7 +132,7 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
 
 압축 전략을 통째로 교체할 수 있도록, Hermes는 **추상 기반 클래스(ABC)** 로
 "컨텍스트 엔진" 인터페이스를 정의합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/agent/context_engine.py" lines="1-26" />
+[`agent/context_engine.py` 1-26행](../agent/context_engine.py#L1-L26)
 (`agent/context_engine.py` 1-26행)
 
 - 기본 구현은 4절의 `ContextCompressor`. 제3자 엔진(예: LCM)은 플러그인 시스템이나

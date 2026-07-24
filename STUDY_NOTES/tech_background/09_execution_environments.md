@@ -46,7 +46,7 @@
 
 - 모든 백엔드는 `tools/environments/` 아래에 있고, 공통 추상 기반 클래스
   `tools/environments/base.py`를 상속합니다.
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/tools/environments/base.py" lines="1-7" />
+  [`tools/environments/base.py` 1-7행](../../tools/environments/base.py#L1-L7)
   - **통일된 실행 모델**(3-6행): 모든 명령이 새 `bash -c` 프로세스를 띄우는
     "spawn-per-call" 모델. init 시 세션 스냅샷(env/함수/alias)을 한 번 캡처해 매
     명령 전에 다시 source하고, CWD는 원격은 stdout 마커, 로컬은 임시 파일로 유지.
@@ -60,6 +60,11 @@
   원칙이 여기서도 적용됩니다. 새 격리 백엔드는 `base.py`의 인터페이스만 구현하면
   코어를 건드리지 않고 추가됩니다. "파일 가시성이 문제면 마운트를 고치지 새 도구를
   만들지 말라"는 rubric도 이 계층을 겨냥한 것입니다.
+
+## 더 읽어보기 (공식 자료)
+
+- Docker: <https://docs.docker.com/> / Apptainer(Singularity): <https://apptainer.org/>
+- Modal: <https://modal.com/docs> / Daytona: <https://www.daytona.io/>
 
 ---
 

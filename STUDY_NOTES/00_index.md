@@ -45,7 +45,7 @@
 | [07_prompt_context.md](07_prompt_context.md) | 1-C-(5) 프롬프트/컨텍스트 | `agent/prompt_builder.py`, `agent/system_prompt.py`, `agent/context_compressor.py`, `agent/context_engine.py` |
 | [08_gateway.md](08_gateway.md) | 1-C-(6) 게이트웨이 | `gateway/run.py`의 `GatewayRunner` → `session.py` → `delivery.py` → `platforms/*` 및 `ADDING_A_PLATFORM.md` |
 | [09_self_improvement.md](09_self_improvement.md) | 1-C-(7) 자기개선 루프 | `agent/curator.py`, `agent/learn_prompt.py`, `agent/learning_graph.py`, `agent/memory_manager.py`, `skills/`의 SKILL.md 구조 |
-| [10_subsystems.md](10_subsystems.md) | 1-C-(8) 부가 서브시스템 | `cron/`, `plugins/`, `acp_adapter/`, 프론트엔드(`ui-tui/`, `apps/desktop/`, `web/`) |
+| [10_subsystems.md](10_subsystems.md) | 1-C-(8) 부가 서브시스템 | `cron/`, `plugins/`, `acp_adapter/`, 프론트엔드(`ui-tui/`, `apps/desktop/`, `web/`), 실행 환경 추상화(`tools/environments/`), 연구용 러너(`batch_runner.py` 등) |
 
 ### 주제 2. 관련 기술 학습 (배경지식)
 
@@ -203,6 +203,11 @@ graph TD
 - 이 학습자료는 **실제 리포지토리 파일을 직접 열어 라인 단위로 확인한 내용**을
   바탕으로 작성했습니다. 파일 경로와 라인 번호를 함께 표기하니, 항상 실제 코드와
   대조해가며 읽으세요.
+- **라인 번호 주의**: 문서의 라인 번호는 작성 시점의 `main` 브랜치 기준입니다.
+  코드가 계속 변하므로 시간이 지나면 몇 줄씩 어긋날 수 있습니다. 라인이 맞지 않으면
+  함께 표기된 **함수/클래스/상수 이름**으로 검색(`grep -n "이름" 파일`)해서 찾으세요.
+- 각 코드 인용은 GitHub에서 바로 열리도록 상대 링크(`../파일#L시작-L끝`)로 걸어
+  두었습니다.
 - Hermes 코어(특히 `cli.py`, `run_agent.py`, `hermes_state.py`,
   `agent/conversation_loop.py`)는 각각 수천~1만 라인이 넘는 매우 큰 파일입니다.
   이 문서들은 "전체 그림 → 핵심 함수/구조 → 대표 라인" 순서로 안내하며, 모든

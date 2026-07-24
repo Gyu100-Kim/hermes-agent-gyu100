@@ -112,7 +112,7 @@ Python에서 **모듈(module)** 은 `.py` 파일 하나, **패키지(package)** 
   `plugins/`, `providers/`, `acp_adapter/`, `tui_gateway/` 등.
 
 이 구분은 그냥 관례가 아니라 **빌드 설정에 명시**되어 있습니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="313-319" />
+[`pyproject.toml` 313-319행](../pyproject.toml#L313-L319)
 
 ```toml
 [tool.setuptools]
@@ -141,7 +141,7 @@ include = ["agent", "agent.*", "tools", "tools.*", "hermes_cli", ...]
 
 "진입점"이란 사용자가 프로그램을 실행했을 때 **가장 먼저 실행되는 함수**입니다.
 `pyproject.toml`의 `[project.scripts]`가 이를 정의합니다.
-<ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="308-311" />
+[`pyproject.toml` 308-311행](../pyproject.toml#L308-L311)
 
 ```toml
 [project.scripts]
@@ -163,7 +163,7 @@ hermes-acp = "acp_adapter.entry:main"  # 에디터용 ACP 서버
 ## 5. 사용 언어
 
 - **Python 3.11 ~ 3.13** (주 언어). 상한선이 중요합니다:
-  <ref_snippet file="/home/ubuntu/repos/hermes-agent-gyu100/pyproject.toml" lines="15-15" />
+  [`pyproject.toml` 15행](../pyproject.toml#L15)
   ```toml
   requires-python = ">=3.11,<3.14"
   ```
