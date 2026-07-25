@@ -1,32 +1,44 @@
 # 용어 및 개념 사전 (dict/)
 
-`hermes-agent-gyu100` 저장소를 이해하는 데 필요한 주요·세부 용어와 개념을 모은 한국어 사전입니다.
+`hermes-agent-gyu100` 저장소를 이해하는 데 필요한 주요·세부 용어와 개념 **237개**를 모은 한국어 사전입니다 (예시 포함 항목 118개).
 
-- 각 용어 설명 안의 링크를 클릭하면 해당 용어 항목으로 이동합니다. 항목마다 **상위 개념 / 하위 개념 / 관련 용어 / 이 용어를 참조하는 항목** 링크가 있어 개념 그래프를 양방향으로 탐색할 수 있습니다.
-- 용어 간 계층·연결 관계의 그래프 데이터는 [graph/](graph/README.md) 디렉토리에 Neo4j·JanusGraph로 바로 들여올 수 있는 형식(CSV + Cypher + GraphML + JSON)으로 저장되어 있습니다.
+## 설계 이념
 
-총 **200개** 용어, **12개** 범주.
+이 사전의 용어·개념들은 서로 관계를 맺으며 하나의 **지식 그래프**를 형성합니다.
 
-## 범주별 문서
+1. **계층 방향** — 개념 간 직접 연결은 **상위/하위** 엣지로 표현합니다. **하위로 갈수록 더 일반적인 개념**, **상위로 갈수록 더 특수한 개념**입니다.
+   - 예: [시스템 프롬프트](01_llm_basics.md#system-prompt)는 [프롬프트](01_llm_basics.md#prompt)의 **상위** 개념입니다.
+   - 예: [PEFT](13_model_learning.md#peft)는 [파인튜닝](13_model_learning.md#fine-tuning)의 **상위** 개념이고, [LoRA](13_model_learning.md#lora)는 PEFT의 **상위** 개념입니다.
+2. **다중 연결** — 하나의 용어는 여러 용어와 동시에 연결될 수 있습니다(상위/하위 엣지는 연결마다 각각 정의됩니다). 계층이 아닌 연결은 **관련 용어**로, 정의 본문 속 언급은 **참조 링크**로 표현합니다. 서로 연결되지 않는 독립 개념도 있습니다.
+3. **노드 명(label)** — 노드의 역할을 규정하는 분류 체계를 둡니다.
+   - `Content` — 사전을 구성하는 용어/개념 노드 (이 사전의 모든 항목)
+   - `ContentClass` — Content의 분류 정보를 갖는 노드. 모든 Content는 상위/하위와는 다른 **BELONGS_TO**(이 class에 속함) 엣지로 최소 1개의 ContentClass에 연결됩니다.
+4. **예시의 위치** — 개념을 설명하기 위해 드는 구체적 예시는 대개 그 개념을 특수화한 것이므로, 그래프 관점에서는 **상위 개념 방향**에 놓입니다. 항목의 `예시` 블록과 "상위 개념(더 특수)" 목록을 함께 보면 개념이 어떻게 구체화되는지 보입니다.
 
-- [LLM 기초](01_llm_basics.md) (15개)
-- [에이전트 코어·대화 루프](02_agent_core.md) (26개)
+용어 간 그래프 데이터(그래프 DB 전환용)는 [graph/](graph/README.md)에 CSV·Cypher·GraphML·JSON 형식으로 저장되어 있습니다.
+
+## 분류(Content Class)
+
+- [LLM 기초](01_llm_basics.md) (27개)
+- [에이전트 코어·대화 루프](02_agent_core.md) (31개)
 - [도구 시스템](03_tool_system.md) (24개)
 - [프롬프트·컨텍스트](04_prompt_context.md) (15개)
-- [메모리·자기개선](05_memory_self_improvement.md) (22개)
+- [메모리·자기개선](05_memory_self_improvement.md) (23개)
 - [상태·영속성·검색](06_state_retrieval.md) (19개)
-- [게이트웨이·인터페이스](07_gateway_interfaces.md) (14개)
+- [게이트웨이·인터페이스](07_gateway_interfaces.md) (16개)
 - [프로토콜·상호운용](08_protocols.md) (19개)
 - [실행 환경·인프라](09_execution_infra.md) (22개)
 - [보안](10_security.md) (8개)
-- [설계 원칙·프로젝트 용어](11_design_principles.md) (8개)
-- [크론·플러그인·부가 서브시스템](12_subsystems.md) (8개)
+- [설계 원칙·프로젝트 용어](11_design_principles.md) (13개)
+- [크론·플러그인·부가 서브시스템](12_subsystems.md) (10개)
+- [모델 학습·적응](13_model_learning.md) (10개)
 
 ## 전체 용어 색인 (가나다·ABC순)
 
 - [ACP (에이전트 클라이언트 프로토콜)](08_protocols.md#acp) — Agent Client Protocol
 - [ACP 어댑터](12_subsystems.md#acp-adapter) — ACP Adapter
 - [AIAgent 클래스](02_agent_core.md#aiagent) — AIAgent (run_agent.py)
+- [API 서버 어댑터](07_gateway_interfaces.md#api-server) — API Server Adapter
 - [AST 기반 도구 발견](03_tool_system.md#ast-discovery) — AST-based Discovery
 - [BM25](06_state_retrieval.md#bm25) — BM25 (Okapi)
 - [CDP (크롬 개발자도구 프로토콜)](08_protocols.md#cdp) — Chrome DevTools Protocol
@@ -47,6 +59,7 @@
 - [LLM 심판](02_agent_core.md#llm-as-judge) — LLM-as-a-Judge
 - [LLM 제공자](02_agent_core.md#provider) — LLM Provider
 - [LSP (언어 서버 프로토콜)](08_protocols.md#lsp) — Language Server Protocol
+- [LoRA](13_model_learning.md#lora) — Low-Rank Adaptation
 - [MCP (모델 컨텍스트 프로토콜)](08_protocols.md#mcp) — Model Context Protocol
 - [MCP 서버](08_protocols.md#mcp-server) — MCP Server
 - [MCP 전송 계층](08_protocols.md#mcp-transport) — MCP Transports
@@ -56,8 +69,11 @@
 - [Mixture-of-Experts (MoE)](02_agent_core.md#moe) — Mixture-of-Experts
 - [Modal 백엔드](09_execution_infra.md#modal-backend) — Modal Backend
 - [Nix / Flake](09_execution_infra.md#nix) — Nix
+- [Nous Portal](11_design_principles.md#nous-portal) — Nous Portal
 - [N×M 통합 문제](08_protocols.md#nxm-problem) — N×M Integration Problem
+- [PEFT (파라미터 효율 파인튜닝)](13_model_learning.md#peft) — Parameter-Efficient Fine-Tuning
 - [REPL](07_gateway_interfaces.md#repl) — REPL
+- [RLHF (인간 피드백 강화학습)](13_model_learning.md#rlhf) — RLHF
 - [ReAct 패턴](02_agent_core.md#react) — ReAct (Reason + Act)
 - [SKILL.md](05_memory_self_improvement.md#skill-md) — SKILL.md
 - [SOUL.md](04_prompt_context.md#soul-md) — SOUL.md
@@ -87,12 +103,15 @@
 - [게이트웨이](07_gateway_interfaces.md#gateway) — Gateway
 - [게이트웨이 세션](07_gateway_interfaces.md#gateway-session) — Gateway Session Context
 - [결과 정규화](03_tool_system.md#result-normalization) — Result Normalization
+- [관리형 도구](11_design_principles.md#managed-tools) — Managed Tools
 - [관측성](12_subsystems.md#observability) — Observability
 - [구조화 요약](04_prompt_context.md#structured-summary) — Structured Summary
+- [구조화 출력](01_llm_basics.md#structured-output) — Structured Output
 - [국제화 (i18n)](12_subsystems.md#i18n) — Internationalization
 - [그라운딩](01_llm_basics.md#grounding) — Grounding
 - [그레이스 콜](02_agent_core.md#grace-call) — Grace Call
 - [기능 협상](08_protocols.md#capability-negotiation) — Capability Negotiation
+- [다중 에이전트 시스템](02_agent_core.md#multi-agent) — Multi-Agent System
 - [데스크톱 앱 (Electron)](07_gateway_interfaces.md#desktop-app) — Desktop App
 - [델리게이션 (작업 위임)](02_agent_core.md#delegation) — Delegation
 - [도구](03_tool_system.md#tool) — Tool
@@ -105,10 +124,13 @@
 - [도구 호출 루프](02_agent_core.md#tool-calling-loop) — Tool-Calling Loop
 - [디스패치](03_tool_system.md#dispatch) — Dispatch
 - [딜리버리 (출력 라우팅)](07_gateway_interfaces.md#delivery) — Delivery
+- [레이트리밋](01_llm_basics.md#rate-limit) — Rate Limit
 - [루트리스 컨테이너](09_execution_infra.md#rootless) — Rootless Container
+- [루프 종료 조건](02_agent_core.md#agent-loop-termination) — Loop Termination
 - [리눅스 네임스페이스](09_execution_infra.md#namespace) — Linux Namespaces
 - [마음 이론](05_memory_self_improvement.md#theory-of-mind) — Theory of Mind
 - [머리/꼬리 보호](04_prompt_context.md#head-tail-protection) — Head/Tail Protection
+- [멀티모달](01_llm_basics.md#multimodal) — Multimodal
 - [메모리 (에이전트 기억)](05_memory_self_improvement.md#memory) — Agent Memory
 - [메모리 도구](05_memory_self_improvement.md#memory-tool) — Memory Tool
 - [메모리 매니저](05_memory_self_improvement.md#memory-manager) — Memory Manager
@@ -119,6 +141,7 @@
 - [반복 예산](02_agent_core.md#iteration-budget) — Iteration Budget
 - [배치 러너](12_subsystems.md#batch-runner) — Batch Runner
 - [벡터 검색](06_state_retrieval.md#vector-search) — Vector Search
+- [벤치마크 (평가)](13_model_learning.md#benchmark) — Benchmark
 - [변경 감지 테스트 (안티패턴)](11_design_principles.md#change-detector) — Change-Detector Tests
 - [변증법적 API](05_memory_self_improvement.md#dialectic-api) — Dialectic API
 - [병렬 도구 호출](02_agent_core.md#parallel-tool-calls) — Parallel Tool Calls
@@ -128,15 +151,19 @@
 - [비밀정보 분리 (.env)](10_security.md#secrets-env) — Secrets in .env
 - [비신뢰 콘텐츠 원칙](10_security.md#untrusted-content) — Untrusted Content
 - [비전 도구](03_tool_system.md#vision-tools) — Vision Tools
+- [비전 모델 (VLM)](01_llm_basics.md#vision-model) — Vision-Language Model
 - [사용자 모델링](05_memory_self_improvement.md#user-modeling) — User Modeling
+- [사전학습](13_model_learning.md#pretraining) — Pre-training
 - [새니타이즈](10_security.md#sanitization) — Sanitization
 - [샌드박스 (격리)](09_execution_infra.md#sandbox) — Sandbox / Isolation
 - [샘플링 / 온도](01_llm_basics.md#sampling) — Sampling / Temperature
 - [서버리스 컴퓨트](09_execution_infra.md#serverless) — Serverless Compute
 - [서브에이전트 / 위임](02_agent_core.md#subagent) — Subagent / Delegation
+- [설정 마법사](11_design_principles.md#setup-wizard) — Setup Wizard
 - [세션](06_state_retrieval.md#session) — Session
 - [세션 검색](06_state_retrieval.md#session-search) — Session Search
 - [세션 스냅샷 (셸 상태)](09_execution_infra.md#session-snapshot) — Session Snapshot
+- [스킨 (CLI 테마)](11_design_principles.md#skin) — Skin
 - [스킬](05_memory_self_improvement.md#skill) — Skill
 - [스킬 고정](05_memory_self_improvement.md#pinning) — Skill Pinning
 - [스킬 도구 (skill_view)](03_tool_system.md#skill-tool) — Skill Tools
@@ -148,18 +175,26 @@
 - [압축 계보](04_prompt_context.md#compression-lineage) — Compression Lineage (parent_session_id)
 - [압축 쿨다운](04_prompt_context.md#compression-cooldown) — Compression Cooldown
 - [앙상블](02_agent_core.md#ensemble) — Ensemble
+- [양자화](13_model_learning.md#quantization) — Quantization
 - [어텐션](01_llm_basics.md#attention) — Attention
 - [에러 봉투](03_tool_system.md#error-envelope) — Error Envelope
 - [에이전트](02_agent_core.md#agent) — Agent
 - [에이전트형 RAG](06_state_retrieval.md#agentic-rag) — Agentic RAG
 - [역색인](06_state_retrieval.md#inverted-index) — Inverted Index
 - [역할 교대 불변식](02_agent_core.md#role-alternation) — Role Alternation
+- [오케스트레이션](02_agent_core.md#orchestration) — Orchestration
+- [오픈 웨이트 모델](13_model_learning.md#open-weights) — Open-Weights Model
+- [옵션 스킬](05_memory_self_improvement.md#optional-skills) — Optional Skills
 - [외부 콘텐츠 테이블](06_state_retrieval.md#external-content) — External-Content FTS Table
 - [요약 기반 압축](04_prompt_context.md#summarization) — Summarization
 - [원격 파일 동기화](09_execution_infra.md#file-sync) — Remote File Sync
 - [웹 검색 도구](03_tool_system.md#web-search-tool) — Web Search Tool
 - [웹 대시보드](07_gateway_interfaces.md#web-dashboard) — Web Dashboard
+- [웹훅](07_gateway_interfaces.md#webhook) — Webhook
 - [음성 모드](03_tool_system.md#voice-mode) — Voice Mode
+- [음성 인식 (STT)](01_llm_basics.md#stt) — Speech-to-Text
+- [음성 합성 (TTS)](01_llm_basics.md#tts) — Text-to-Speech
+- [응답 스트리밍](01_llm_basics.md#streaming) — Streaming
 - [의미 기억](05_memory_self_improvement.md#semantic-memory) — Semantic Memory
 - [의존성 정확 고정](09_execution_infra.md#exact-pinning) — Exact Pinning
 - [일화 기억](05_memory_self_improvement.md#episodic-memory) — Episodic Memory
@@ -168,16 +203,24 @@
 - [자기 성찰](05_memory_self_improvement.md#self-reflection) — Self-Reflection
 - [자기개선 에이전트](05_memory_self_improvement.md#self-improving-agent) — Self-Improving Agent
 - [자기일관성](02_agent_core.md#self-consistency) — Self-Consistency
+- [자율성 수준](02_agent_core.md#autonomy) — Autonomy Level
 - [재시도와 폴백](02_agent_core.md#retry-fallback) — Retry & Fallback
 - [재현성](09_execution_infra.md#reproducibility) — Reproducibility
 - [전문 검색 (FTS)](06_state_retrieval.md#fts) — Full-Text Search
 - [절차 기억](05_memory_self_improvement.md#procedural-memory) — Procedural Memory
 - [점진적 공개](05_memory_self_improvement.md#progressive-disclosure) — Progressive Disclosure
 - [접근성 트리](08_protocols.md#accessibility-tree) — Accessibility Tree
+- [제공자별 캐시 구현](01_llm_basics.md#context-caching-provider) — Provider Cache Implementations
 - [제안자/종합자](02_agent_core.md#proposer-aggregator) — Proposer / Aggregator
+- [제약 디코딩](01_llm_basics.md#constrained-decoding) — Constrained Decoding
 - [좁은 허리 원칙](11_design_principles.md#narrow-waist) — Narrow Waist
 - [중간 소실 현상](04_prompt_context.md#lost-in-the-middle) — Lost in the Middle
+- [지수 백오프](01_llm_basics.md#backoff) — Exponential Backoff
+- [지시 튜닝](13_model_learning.md#instruction-tuning) — Instruction Tuning
+- [지식 증류](13_model_learning.md#distillation) — Knowledge Distillation
 - [지연 설치 의존성](09_execution_infra.md#lazy-deps) — Lazy Dependencies
+- [지연 시간](01_llm_basics.md#latency) — Latency
+- [추론 (서빙)](01_llm_basics.md#inference) — Inference / Serving
 - [추론 모델 / 사고 과정](01_llm_basics.md#reasoning-model) — Reasoning Model / Chain-of-Thought
 - [칸반 (다중 에이전트 보드)](02_agent_core.md#kanban) — Kanban
 - [컨벤셔널 커밋](11_design_principles.md#conventional-commits) — Conventional Commits
@@ -198,13 +241,17 @@
 - [탈출구 패턴](11_design_principles.md#escape-hatch) — Escape Hatch
 - [터미널 도구](03_tool_system.md#terminal-tool) — Terminal Tool
 - [턴](02_agent_core.md#turn) — Turn
+- [턴 격리](11_design_principles.md#turn-isolation) — Turn Isolation
 - [토크나이저 (검색)](06_state_retrieval.md#tokenizer) — Tokenizer (FTS)
 - [토큰](01_llm_basics.md#token) — Token
 - [토큰 예산 기반 꼬리 보호](04_prompt_context.md#token-budget-tail) — Token-Budget Tail Protection
 - [통합 세션](07_gateway_interfaces.md#unified-inbox) — Unified Session
 - [툴셋](03_tool_system.md#toolset) — Toolset
 - [트라이그램 토크나이저](06_state_retrieval.md#trigram) — Trigram
+- [트래젝토리 (실행 궤적)](12_subsystems.md#trajectory) — Trajectory
 - [트랜스포머](01_llm_basics.md#transformer) — Transformer
+- [트리아지 스위퍼](12_subsystems.md#triage-sweeper) — Triage Sweeper
+- [파인튜닝 (FT)](13_model_learning.md#fine-tuning) — Fine-Tuning
 - [파일 도구](03_tool_system.md#file-tools) — File Tools
 - [페르소나](04_prompt_context.md#persona) — Persona
 - [풋프린트 사다리](11_design_principles.md#footprint-ladder) — Footprint Ladder
@@ -224,3 +271,4 @@
 - [헤드리스 브라우저](08_protocols.md#headless) — Headless Browser
 - [호출별 스폰 모델](09_execution_infra.md#spawn-per-call) — Spawn-per-Call
 - [환각](01_llm_basics.md#hallucination) — Hallucination
+- [휴먼 인 더 루프](02_agent_core.md#human-in-the-loop) — Human-in-the-Loop
