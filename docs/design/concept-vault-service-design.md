@@ -20,9 +20,10 @@
 8. [기능 3 — 저장 개념 클러스터링](#8-기능-3--저장-개념-클러스터링)
 9. [기능 4 — 개념 구조 탐색(시각화)](#9-기능-4--개념-구조-탐색시각화)
 10. [기능 5 — 개념 업그레이드](#10-기능-5--개념-업그레이드)
-11. [API 설계 요약](#11-api-설계-요약)
-12. [데이터 무결성·검증 규칙](#12-데이터-무결성검증-규칙)
-13. [구현 로드맵](#13-구현-로드맵)
+11. [기능 6 — ConceptClass 관리](#11-기능-6--conceptclass-관리)
+12. [API 설계 요약](#12-api-설계-요약)
+13. [데이터 무결성·검증 규칙](#13-데이터-무결성검증-규칙)
+14. [구현 로드맵](#14-구현-로드맵)
 
 ---
 
@@ -65,7 +66,7 @@
 | 노드 2종 | `Content`(용어·개념) + `ContentClass`(역할 분류). 모든 Content는 최소 1개 클래스에 `BELONGS_TO` |
 | 계층 방향 규약 | **하위 = 더 일반·근본(기반·전제), 상위 = 더 특수(파생)**. 엣지는 `(파생/특수) → (기반/일반)` 한 방향으로 저장 (dict1: `SPECIALIZES`, dict2: `UPPER_OF` — 이름만 다르고 의미 동일) |
 | 계층 판정 기준 | "B가 A를 **활용해 만들어졌으면** B가 상위". 대표 사슬: `BERT → Transformer → Attention`, `LoRA → PEFT → Fine-tuning` |
-| 판정 절차 4단계 | ① B가 A를 활용해 만들어졌는가 → SPECIALIZES ② A의 정의에 B가 필수인가 → 역방향 SPECIALIZES ③ 계층은 아니나 밀접한가 → `RELATED_TO` ④ 본문 언급뿐인가 → `MENTIONS` (계층으로 승격 금지) |
+| 판정 절차 4단계 | ① B가 A를 활용해 만들어졌는가 → 계층 엣지 ② A의 정의에 B가 필수인가 → 역방향 계층 엣지 ③ 계층은 아니나 밀접한가 → `RELATED_TO` ④ 본문 언급뿐인가 → `MENTIONS` (계층으로 승격 금지) |
 | 최초 등장 시기 | `first_appearance`/`origin`은 **참고 속성**일 뿐 계층의 절대 기준이 아님. 알려진 정밀도까지만 기록, 지어내지 않음 |
 | 다중 연결 | 한 개념은 여러 개념과 동시에 연결 가능. 연결 없는 독립 개념도 허용 |
 
@@ -95,7 +96,7 @@
 | **초안(draft)/승인(approved) 상태 분리** | 사용자 검토 전 LLM 제안을 그래프 본체와 격리 (기능 1·5의 검토 단계) |
 | **별칭 처리(`ALIAS_OF`) + 임베딩 유사도 기반 중복 탐지** | "기존에 등록된 개념을 다른 이름으로 저장" 문제를 등록 시점에 자동 탐지 — 자료에서는 사람이 수작업으로 통일 |
 | **리비전(`ConceptRevision`) 보존** | 업그레이드(기능 5) 시 학습 이력 추적·복원 |
-| **클러스터 노드(`Cluster`) 1급 시민화** | 자료의 ContentClass는 수작업 고정 분류 — 여기에 그래프 구조 기반 자동 클러스터링(기능 3)을 별도 축으로 추가 |
+| **커뮤니티 노드(`Community`) 1급 시민화** | 자료의 ContentClass는 수작업 고정 분류 — 여기에 그래프 구조 기반 자동 클러스터링(기능 3)의 결과 군집을 별도 축으로 추가. 역할 분류(ConceptClass)와 혼동되지 않도록 그래프 커뮤니티 탐지(community detection) 용어를 그대로 노드 이름으로 사용 |
 | **벡터 인덱스 + 전문(full-text) 인덱스 상시 유지** | 서술형 검색(기능 2)과 중복 탐지의 기반 |
 | **저장 트랜잭션마다 무결성 자동 검증** | 자료의 "검증 체크리스트"를 사람이 아닌 시스템이 매번 수행 |
 
@@ -118,7 +119,7 @@
 
 선정 이유:
 
-1. **본 서비스의 5개 기능을 한 시스템으로 전부 충족** — 계층 탐색(Cypher 가변 길이 경로),
+1. **본 서비스의 기능 전부를 한 시스템으로 충족** — 계층 탐색(Cypher 가변 길이 경로),
    서술형 검색(네이티브 벡터 인덱스), 키워드 검색(네이티브 full-text 인덱스), 클러스터링
    (GDS의 Louvain/Leiden — 기능 3의 핵심), 시각화(Bolt 프로토콜 + JS 생태계).
 2. **첨부 자료와의 직접 호환** — dict1·dict2의 그래프 데이터가 Neo4j 임포트 형식
@@ -146,23 +147,23 @@
 | Label | 의미 | 주요 속성 |
 |---|---|---|
 | `Concept` | 사용자가 학습·저장한 개념 (자료의 Content) | `id`(슬러그, 전역 고유), `name_ko`, `name_en`, `aliases[]`, `definition`(사용자 언어 정의), `example`, `origin`(최초 등장 시기 — 참고 속성, 자유 정밀도 문자열), `embedding`(벡터), `status`(`draft`/`approved`), `created_at`, `updated_at`, `revision_no` |
-| `ConceptClass` | 개념의 역할 분류 (자료의 ContentClass) | `id`, `name`, `description`. **소수 유지** — 초기값은 dict1의 9종(Concept·Component·Technology·Mechanism·Principle·Protocol·Artifact·Research·Threat)을 도메인 중립적으로 일반화한 것에서 시작하고, 신설은 관리 기능으로만 |
-| `Cluster` | 기능 3이 생성하는 구조 기반 군집 노드 | `id`, `name`(LLM 명명), `description`(LLM 생성), `algorithm`(louvain/leiden), `run_id`(클러스터링 실행 식별자), `created_at`, `size` |
+| `ConceptClass` | 개념의 역할 분류 (자료의 ContentClass) | `id`, `name`, `description`. **소수 유지** — 초기값은 dict1의 9종(Concept·Component·Technology·Mechanism·Principle·Protocol·Artifact·Research·Threat)을 도메인 중립적으로 일반화한 것에서 시작. 종류의 추가·이름 변경·제거는 기능 6(클래스 관리)으로 사용자가 수행 |
+| `Community` | 기능 3(클러스터링)이 그래프 구조에서 발견해 생성하는 군집 노드 — ConceptClass(사람이 정의한 역할 분류)와 구분되는 **구조 기반** 분류 축 | `id`, `name`(LLM 명명), `description`(LLM 생성), `algorithm`(louvain/leiden), `run_id`(클러스터링 실행 식별자), `created_at`, `size` |
 | `ConceptRevision` | 개념의 과거 버전 스냅숏 | `revision_no`, `definition`, `example`, `saved_at`, `reason`(upgrade/merge/rename) |
 
-ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `cluster:` 접두로 전역
+ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `community:` 접두로 전역
 고유성을 보장한다.
 
 ### 4.2 엣지
 
 | Type | 방향 | 의미 |
 |---|---|---|
-| `SPECIALIZES` | `(파생/특수 Concept) → (기반/일반 Concept)` | **계층 엣지.** 출발 노드가 도착 노드를 기반·전제로 활용해 만들어진 파생(상위) 개념. dict1의 `SPECIALIZES`와 dict2의 `UPPER_OF`를 통일한 이름 — "출발이 도착을 특수화한 것"이라는 의미가 이름에서 읽히는 dict1 쪽을 채택 |
-| `RELATED_TO` | Concept → Concept (정렬된 한 방향만 저장) | 계층은 아니지만 밀접히 관련. 같은 쌍이 SPECIALIZES와 중복되면 SPECIALIZES 우선 |
+| `UPPER_OF` | `(파생/특수 Concept) → (기반/일반 Concept)` | **계층 엣지.** 출발 노드가 도착 노드를 기반·전제로 활용해 만들어진 파생 개념, 즉 **출발 노드가 도착 노드의 상위(UPPER)** 라는 의미. dict1의 `SPECIALIZES`와 dict2의 `UPPER_OF`를 통일한 이름 — "상위"라는 의미가 이름에서 바로 읽히는 dict2 쪽을 채택 |
+| `RELATED_TO` | Concept → Concept (정렬된 한 방향만 저장) | 계층은 아니지만 밀접히 관련. 같은 쌍이 UPPER_OF와 중복되면 UPPER_OF 우선 |
 | `MENTIONS` | Concept → Concept | 정의 본문에서 언급될 뿐 계층·관련으로 분류하지 않은 참조 |
 | `BELONGS_TO` | Concept → ConceptClass | 역할 분류 소속(계층 아님). 모든 approved Concept는 최소 1개 필수 |
 | `ALIAS_OF` | Concept(별칭·중복 등록분) → Concept(정본) | **[개선]** 용어 통일 시 흡수된 명칭의 흔적. 별칭 노드는 검색 인덱스에는 남기되 그래프 탐색·클러스터링에서는 정본으로 해소 |
-| `IN_CLUSTER` | Concept → Cluster | **[개선]** 기능 3의 결과. 클러스터링 실행(run)마다 재생성 |
+| `IN_COMMUNITY` | Concept → Community | **[개선]** 기능 3의 결과. 클러스터링 실행(run)마다 재생성 |
 | `HAS_REVISION` | Concept → ConceptRevision | **[개선]** 업그레이드 이력 |
 
 ### 4.3 계층 판정 절차 (자료의 v3 사상 그대로 — 시스템 규칙화)
@@ -170,9 +171,9 @@ ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `cl
 두 개념 A, B의 관계는 반드시 다음 순서로 판정한다(LLM 프롬프트와 검토 UI 가이드에 동일하게
 내장):
 
-1. **"B는 A를 기반·전제로 활용해 만들어졌는가?"** → `B -[:SPECIALIZES]-> A`.
+1. **"B는 A를 기반·전제로 활용해 만들어졌는가?"** → `B -[:UPPER_OF]-> A`.
    (예: BERT는 Transformer의 Encoder를 활용해 만든 모델 → BERT가 상위)
-2. **"A를 규정·이해하는 데 B가 반드시 필요한가?"** → `A -[:SPECIALIZES]-> B`.
+2. **"A를 규정·이해하는 데 B가 반드시 필요한가?"** → `A -[:UPPER_OF]-> B`.
    (예: Transformer의 정의에 Attention이 필수 → Transformer가 상위)
 3. 계층은 아니지만 **개념적으로 밀접**한가? → `RELATED_TO`.
 4. 그저 **본문에 등장**할 뿐인가? → `MENTIONS`. 계층으로 승격하지 않는다.
@@ -182,13 +183,13 @@ ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `cl
 - `origin`(최초 등장 시기)은 판정의 **참고 근거로만** 제시하고, 절대 기준으로 쓰지 않는다.
 - "포함/구성"과 "활용/의존"을 구분한다 — A가 B를 구성 요소로 포함한다는 사실만으로 B가
   상위가 되지 않는다(v2 오류 유형).
-- 저장 시 `SPECIALIZES` 순환 검사를 통과해야 한다(순환 = 방향 오판의 신호).
+- 저장 시 `UPPER_OF` 순환 검사를 통과해야 한다(순환 = 방향 오판의 신호).
 
 ### 4.4 인덱스
 
 | 인덱스 | 대상 | 용도 |
 |---|---|---|
-| 유니크 제약 | `Concept.id`, `ConceptClass.id`, `Cluster.id` | 전역 고유성 |
+| 유니크 제약 | `Concept.id`, `ConceptClass.id`, `Community.id` | 전역 고유성 |
 | Full-text (Lucene) | `Concept.name_ko`, `name_en`, `aliases`, `definition` | 기능 2 키워드 검색, 기능 1 중복 탐지 1차 |
 | Vector | `Concept.embedding` | 기능 2 서술형 검색, 기능 1 중복 탐지 2차 |
 
@@ -204,6 +205,7 @@ graph LR
         f3["3 클러스터링"]
         f4["4 구조 탐색 (그래프 시각화)"]
         f5["5 개념 업그레이드"]
+        f6["6 클래스 관리"]
     end
     subgraph backend["백엔드 API 서버 (FastAPI)"]
         api["REST API"]
@@ -277,7 +279,7 @@ graph TD
 2. **클래스 분류**: 정의를 근거로 ConceptClass 1개 이상을 제안(근거 문장 포함).
 3. **계층·관계 규정**: 벡터·전문 검색으로 좁힌 이웃 후보군(top-N)과 신규 개념 사이의 관계를
    [4.3 판정 절차](#43-계층-판정-절차-자료의-v3-사상-그대로--시스템-규칙화)를 내장한 프롬프트로
-   분석 → `SPECIALIZES`(방향 포함)/`RELATED_TO`/`MENTIONS` 제안 목록 생성. 각 제안에는
+   분석 → `UPPER_OF`(방향 포함)/`RELATED_TO`/`MENTIONS` 제안 목록 생성. 각 제안에는
    **판정 근거**(어느 규칙에 의해, 왜)와 origin 참고 정보를 첨부.
 4. **정의 보강 제안(선택)**: 정의 본문 속 전문 용어 중 그래프에 이미 존재하는 개념을
    링크(MENTIONS) 후보로 표시. 그래프에 없는 용어는 "추후 등록 후보"로만 목록화(자동 등록
@@ -294,7 +296,7 @@ graph TD
 **Step 4 — 신규 저장 (시스템)**
 
 - 단일 트랜잭션으로: Concept 노드 `approved` 승격 → 승인된 엣지 생성 → 임베딩 저장 →
-  [12장](#12-데이터-무결성검증-규칙) 검증(클래스 ≥ 1, SPECIALIZES 순환 0, 계층/관련 중복 0)
+  [12장](#12-데이터-무결성검증-규칙) 검증(클래스 ≥ 1, UPPER_OF 순환 0, 계층/관련 중복 0)
   → 실패 시 롤백하고 검토 화면으로 반환.
 
 ---
@@ -324,28 +326,29 @@ graph TD
 
 ## 8. 기능 3 — 저장 개념 클러스터링
 
-수작업 고정 분류(ConceptClass)와 별개로, **그래프 구조 자체**에서 군집을 발견해 개념이
-속하는 상위 묶음(class)을 자동 부여하는 기능입니다.
+역할 분류(ConceptClass)와 별개로, **그래프 구조 자체**에서 군집을 발견해 개념이 속하는
+상위 묶음을 자동 부여하는 기능입니다. 결과 군집은 `Community` 노드로 저장됩니다
+(ConceptClass = 사람이 정의한 역할 분류, Community = 구조에서 발견된 군집 — 별도 축).
 
 ### 8.1 절차
 
 1. **사용자 지시로만 실행** (자동 백그라운드 실행 없음 — 사용자가 원할 때).
-2. **그래프 투영**: `approved` Concept 노드 + `SPECIALIZES`(가중 2.0) + `RELATED_TO`(가중
+2. **그래프 투영**: `approved` Concept 노드 + `UPPER_OF`(가중 2.0) + `RELATED_TO`(가중
    1.0) 엣지를 GDS 인메모리 그래프로 투영. `MENTIONS`/`BELONGS_TO`는 제외(잡음),
    `ALIAS_OF`는 정본으로 해소.
 3. **커뮤니티 탐지**: GDS **Leiden**(기본, Louvain의 개선판 — 연결성 보장) 실행.
    해상도 파라미터는 설정 가능(기본 1.0), 최소 클러스터 크기 미달(예: <3)은 "미분류"로 묶음.
 4. **클러스터 정의·노드 생성 (LLM)**: 각 군집의 구성 개념 이름+정의 요약을 LLM에 주어
-   `name`과 `description`을 생성 → `Cluster` 노드 생성, 구성 Concept들과 `IN_CLUSTER` 엣지
-   연결.
+   `name`과 `description`을 생성 → `Community` 노드 생성, 구성 Concept들과 `IN_COMMUNITY`
+   엣지 연결.
 5. **결과 요약 제시**: 클러스터 수·크기 분포·이름/서술 목록. 사용자는 이름·서술을 수정하거나
-   군집 간 개념 이동 가능(수정은 Cluster 노드 속성/IN_CLUSTER 엣지에만 반영 — 원 그래프
+   군집 간 개념 이동 가능(수정은 Community 노드 속성/IN_COMMUNITY 엣지에만 반영 — 원 그래프
    불변).
 
 ### 8.2 재클러스터링 정책
 
 - 매 실행은 새로운 `run_id`를 가지며, **최신 run만 활성**(기능 4가 참조). 이전 run의
-  Cluster 노드·엣지는 이력으로 보존하되 비활성 표시(속성 `active: false`).
+  Community 노드·엣지는 이력으로 보존하되 비활성 표시(속성 `active: false`).
 - 개념 추가/업그레이드가 누적되면 화면에 "마지막 클러스터링 이후 N개 개념 변경 — 재실행
   권장" 배지를 표시.
 
@@ -362,15 +365,15 @@ graph TD
 2. **클러스터 개요 화면**: 활성 run의 클러스터들을 카드(이름·서술·크기)로 나열 + 클러스터 간
    연결 강도(군집 간 엣지 수)를 보여주는 상위 레벨 그래프.
 3. **클러스터 선택 → 하위 구조 시각화**: 선택한 클러스터에 속한 Concept 노드들과 그 사이의
-   `SPECIALIZES`(화살표, 계층 레이아웃의 기준)·`RELATED_TO`(점선) 엣지를 Cytoscape.js로
+   `UPPER_OF`(화살표, 계층 레이아웃의 기준)·`RELATED_TO`(점선) 엣지를 Cytoscape.js로
    렌더링.
-   - 레이아웃: 계층형(SPECIALIZES 방향 기준, 기반 개념이 아래·파생이 위) 기본, force 전환
+   - 레이아웃: 계층형(UPPER_OF 방향 기준, 기반 개념이 아래·파생이 위) 기본, force 전환
      가능.
    - 노드 시각 인코딩: 색 = ConceptClass, 크기 = 연결 수(허브 강조).
    - 클러스터 경계 밖으로 이어지는 엣지는 흐리게 표시하고 클릭 시 해당 클러스터로 이동.
 4. **노드 클릭 → 상세**: 사이드 패널에 정의 전문·예시·origin·클래스·별칭·리비전 이력·
    기반 개념(하위)/파생 개념(상위)/관련 목록을 표시. 여기서 바로 기능 5(업그레이드)로 진입
-   가능. "기반 사슬 보기" 버튼은 `SPECIALIZES*` 경로(예: LoRA → PEFT → Fine-tuning →
+   가능. "기반 사슬 보기" 버튼은 `UPPER_OF*` 경로(예: LoRA → PEFT → Fine-tuning →
    Pre-training)를 강조 표시 — 복습 동선의 핵심.
 
 ---
@@ -407,7 +410,35 @@ graph TD
 
 ---
 
-## 11. API 설계 요약
+## 11. 기능 6 — ConceptClass 관리
+
+사용자가 역할 분류 체계(ConceptClass) 자체를 직접 관리하는 기능입니다. 자료에서는 클래스
+정의가 문서(`00_content_classes.md`)에 고정되어 있었으나, 서비스에서는 사용자의 학습 영역이
+확장됨에 따라 분류 체계도 진화할 수 있어야 합니다. 단, "클래스는 소수 유지"라는 원칙은
+UI 가이드로 유지합니다(무분별한 신설 억제).
+
+### 11.1 절차
+
+1. **클래스 목록 화면**: 전체 ConceptClass를 이름·설명·소속 개념 수와 함께 나열.
+2. **추가**: 이름·설명을 입력해 신규 클래스 생성. 기존 클래스와 이름·의미가 유사하면
+   경고 표시(LLM 유사도 검토 — 분류 체계 중복 방지).
+3. **이름·설명 변경**: 클래스 노드 속성만 수정 — 소속 개념(`BELONGS_TO`)은 그대로 유지되어
+   별도 마이그레이션이 필요 없음. 변경 이력은 감사 로그로 기록.
+4. **제거**: 소속 개념이 있는 클래스는 바로 삭제할 수 없음(무결성 규칙 "모든 approved
+   Concept는 클래스 ≥ 1" 보호). 제거 절차:
+   - 시스템이 소속 개념 목록을 보여주고 **이관 대상 클래스**를 지정하게 함(일괄 이관).
+   - LLM이 개념별 재분류를 제안하게 할 수도 있음(개념 정의 기반 추천) — 사용자 검토 후 적용.
+   - 이관 완료 후(소속 0) 클래스 노드 삭제. 삭제 전 상태는 감사 로그에 보존.
+
+### 11.2 규칙
+
+- 클래스 변경(추가·개명·제거)은 Concept 노드·계층 엣지에 영향을 주지 않는다 — `BELONGS_TO`
+  엣지만 변경된다.
+- 제거·이관은 단일 트랜잭션으로 수행하고, 종료 시 무결성 검증(클래스 ≥ 1)을 통과해야 한다.
+
+---
+
+## 12. API 설계 요약
 
 | 기능 | 엔드포인트 | 설명 |
 |---|---|---|
@@ -416,42 +447,46 @@ graph TD
 | 1 | `POST /concepts/drafts/{id}/commit` | 검토 결과(승인·수정된 제안)와 함께 확정 저장 |
 | 2 | `GET /search?q=...&mode=auto` | 키워드+서술형 하이브리드 검색 |
 | 3 | `POST /clustering/runs` | 클러스터링 실행(파라미터: algorithm, resolution) |
-| 3 | `GET /clustering/runs/latest` · `PATCH /clusters/{id}` | 활성 run 조회 / 이름·서술·소속 수정 |
-| 4 | `GET /clusters/{id}/graph` | 클러스터 내부 서브그래프(노드·엣지 JSON) |
-| 4 | `GET /concepts/{id}` · `GET /concepts/{id}/chain` | 개념 상세 / SPECIALIZES 기반 사슬 |
+| 3 | `GET /clustering/runs/latest` · `PATCH /communities/{id}` | 활성 run 조회 / 이름·서술·소속 수정 |
+| 4 | `GET /communities/{id}/graph` | 커뮤니티 내부 서브그래프(노드·엣지 JSON) |
+| 4 | `GET /concepts/{id}` · `GET /concepts/{id}/chain` | 개념 상세 / UPPER_OF 기반 사슬 |
 | 5 | `POST /concepts/{id}/upgrade` | 추가 정보 제출 → 병합·재분석 초안 반환 (이후 commit 재사용) |
+| 6 | `GET /classes` · `POST /classes` | 클래스 목록(소속 개념 수 포함) / 신규 클래스 추가 |
+| 6 | `PATCH /classes/{id}` | 클래스 이름·설명 변경 |
+| 6 | `DELETE /classes/{id}?migrate_to=...` | 소속 개념 이관 후 클래스 제거 (이관 대상 필수) |
 | 공통 | `GET /export` | graph/ 형식(CSV·Cypher·GraphML·JSON) 백업 내보내기 — 자료의 산출물 형식 계승 |
 
 ---
 
-## 12. 데이터 무결성·검증 규칙
+## 13. 데이터 무결성·검증 규칙
 
 자료의 "검증 체크리스트"를 저장 트랜잭션마다 시스템이 자동 수행하는 불변 조건으로 승격:
 
 1. 모든 `approved` Concept는 `BELONGS_TO` ≥ 1.
-2. `SPECIALIZES`는 Concept → Concept, `BELONGS_TO`는 Concept → ConceptClass만 허용.
-3. **`SPECIALIZES` 순환 0** — 저장하려는 엣지가 순환을 만들면 거부하고 방향 재검토 요구.
-4. 같은 노드 쌍이 `SPECIALIZES`와 `RELATED_TO`에 중복 금지(계층 우선).
+2. `UPPER_OF`는 Concept → Concept, `BELONGS_TO`는 Concept → ConceptClass만 허용.
+3. **`UPPER_OF` 순환 0** — 저장하려는 엣지가 순환을 만들면 거부하고 방향 재검토 요구.
+4. 같은 노드 쌍이 `UPPER_OF`와 `RELATED_TO`에 중복 금지(계층 우선).
 5. `RELATED_TO`는 id 정렬 후 한 방향만 저장(중복 방지).
-6. 노드 id 전역 고유(`concept:`/`class:`/`cluster:` 네임스페이스).
+6. 노드 id 전역 고유(`concept:`/`class:`/`community:` 네임스페이스).
 7. dangling 엣지 0 (참조 무결성).
 8. `ALIAS_OF`의 도착 노드는 정본(`approved`, 자신이 다른 노드의 별칭이 아님)이어야 함
    (별칭 사슬 금지).
 9. 통계(개념 수·엣지 수·클래스 분포)는 항상 그래프에서 실시간 산출 — 하드코딩 금지.
-10. 대표 사슬 회귀 검사(시드 데이터 기준): `Transformer -[:SPECIALIZES]-> Attention`은
+10. 대표 사슬 회귀 검사(시드 데이터 기준): `Transformer -[:UPPER_OF]-> Attention`은
     존재하고 역방향은 존재하지 않아야 함.
+11. ConceptClass 제거는 소속 개념 0일 때만 허용(제거 전 이관 필수 — 기능 6).
 
 ---
 
-## 13. 구현 로드맵
+## 14. 구현 로드맵
 
 | 단계 | 범위 | 산출물 |
 |---|---|---|
-| Phase 1 | 인프라 + 데이터 모델 | Neo4j CE+GDS docker compose, 스키마·제약·인덱스 생성 스크립트, dict1·dict2 데이터 시드 임포트(모델 매핑: Content→Concept, UPPER_OF→SPECIALIZES) |
+| Phase 1 | 인프라 + 데이터 모델 | Neo4j CE+GDS docker compose, 스키마·제약·인덱스 생성 스크립트, dict1·dict2 데이터 시드 임포트(모델 매핑: Content→Concept, dict1의 SPECIALIZES→UPPER_OF) |
 | Phase 2 | 기능 1 (입력 파이프라인) | 초안 저장, 중복 탐지(전문+벡터), LLM 관계 분석, 검토 UI, 트랜잭션 저장+검증기 |
 | Phase 3 | 기능 2 (탐색) | 하이브리드 검색 API + 결과 UI |
 | Phase 4 | 기능 3·4 (클러스터링+시각화) | GDS Leiden 파이프라인, LLM 클러스터 명명, Cytoscape.js 구조 탐색 화면 |
-| Phase 5 | 기능 5 (업그레이드) + 내보내기 | 병합·재분석, 리비전, `/export` 백업 |
+| Phase 5 | 기능 5 (업그레이드) + 기능 6 (클래스 관리) + 내보내기 | 병합·재분석, 리비전, 클래스 CRUD·이관, `/export` 백업 |
 
-각 Phase 종료 시 [12장](#12-데이터-무결성검증-규칙) 전 항목을 통과하는 자동 테스트를
+각 Phase 종료 시 [13장](#13-데이터-무결성검증-규칙) 전 항목을 통과하는 자동 테스트를
 포함한다.
