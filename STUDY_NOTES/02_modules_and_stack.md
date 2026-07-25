@@ -74,8 +74,8 @@ Hermes가 **공급망 보안(supply-chain security)** 을 매우 진지하게 �
 - `fal` — 이미지 생성 백엔드
 - `edge-tts`/`tts-premium`/`voice` — 음성(TTS/STT)
 - `messaging`/`slack`/`matrix`/`teams`/`dingtalk`/`feishu` — 메시징 플랫폼
-- `modal`/`daytona` — 서버리스 실행 환경
-- `mcp`/`acp` — MCP/ACP 프로토콜
+- `modal`/`daytona` — 서버리스 실행 환경 ([용어사전](../dict/09_execution_infra.md#execution-environment))
+- `mcp`/`acp` — MCP ([용어사전](../dict/08_protocols.md#mcp))/ACP ([용어사전](../dict/08_protocols.md#acp)) 프로토콜
 - `bedrock`/`vertex`/`azure-identity` — 클라우드 provider 인증
 - `web` — 대시보드 서버
 - `dev` — 개발 도구(`pytest`, `ruff`, `ty` 등)
@@ -144,12 +144,12 @@ matrix의 `python-olm`은 Windows/최신 macOS에 휠이 없어 `[all]`에 넣�
 
 Python 외 스택은 주로 프론트엔드입니다(자세한 내용 [10](10_subsystems.md)).
 
-- `ui-tui/` — **Ink**(터미널에서 React를 쓰게 해주는 라이브러리) 기반 TUI.
+- `ui-tui/` — **Ink**(터미널에서 React를 쓰게 해주는 라이브러리) 기반 TUI ([용어사전](../dict/07_gateway_interfaces.md#tui)).
   `package.json`, `tsconfig*.json`, `vitest.config.ts`로 구성.
 - `web/` — **Vite + React** 기반 브라우저 대시보드.
-- `apps/desktop/` — **Electron** 데스크톱 앱.
+- `apps/desktop/` — **Electron** 데스크톱 앱 ([용어사전](../dict/07_gateway_interfaces.md#desktop-app)).
 - 루트 `package.json`, `eslint.config.shared.mjs` — JS/TS 워크스페이스 공통 설정.
-- Nix(`flake.nix`) — 재현 가능한 빌드/개발 환경.
+- Nix ([용어사전](../dict/09_execution_infra.md#nix))(`flake.nix`) — 재현 가능한 빌드/개발 환경.
 
 다음 문서부터는 실제 코드 진입점으로 내려갑니다.
 → [03_entrypoints.md](03_entrypoints.md)

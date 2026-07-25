@@ -2,13 +2,13 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-지금까지 본 코어·도구·상태·게이트웨이·자기개선 외에도, Hermes를 "완성된 제품"으로
+지금까지 본 코어·도구·상태·게이트웨이 ([용어사전](../dict/07_gateway_interfaces.md#gateway))·자기개선 외에도, Hermes를 "완성된 제품"으로
 만드는 주변 서브시스템들이 있습니다. 이 문서는 다섯 가지를 개요 수준으로 정리합니다:
 
 1. **cron** (`cron/`) — 자연어로 예약하는 작업 스케줄러
 2. **plugins** (`plugins/`) — 코어를 건드리지 않는 확장 시스템
-3. **ACP** (`acp_adapter/`) — 코드 에디터 통합
-4. **프론트엔드** (`ui-tui/`, `apps/desktop/`, `web/`) — TUI·데스크톱·웹 대시보드
+3. **ACP ([용어사전](../dict/08_protocols.md#acp))** (`acp_adapter/`) — 코드 에디터 통합
+4. **프론트엔드** (`ui-tui/`, `apps/desktop/`, `web/`) — TUI ([용어사전](../dict/07_gateway_interfaces.md#tui))·데스크톱·웹 대시보드 ([용어사전](../dict/07_gateway_interfaces.md#web-dashboard))
 
 ### 소목차
 - [1. cron — 예약 작업 스케줄러](#1-cron--예약-작업-스케줄러)
@@ -54,7 +54,7 @@ runs at a time if multiple processes overlap.
 동일한 WAL/DELETE 폴백을 얻습니다.
 
 > **왜 CLI + 스킬로 노출하나 (설계):** cron 관리는 `hermes cron` 명령 + 스킬로
-> 에이전트가 다룹니다([05](05_tools.md)의 Footprint Ladder 2번 rung). 결과 전달은
+> 에이전트가 다룹니다([05](05_tools.md)의 Footprint Ladder ([용어사전](../dict/11_design_principles.md#footprint-ladder)) 2번 rung). 결과 전달은
 > [08](08_gateway.md)의 `delivery.py`가 담당합니다.
 
 ---
@@ -66,7 +66,7 @@ runs at a time if multiple processes overlap.
 
 - `plugins/memory/` — 메모리 provider(honcho, mem0, supermemory, ...) → [09](09_self_improvement.md)
 - `plugins/model-providers/` — 추론 백엔드(openrouter, anthropic, gmi, ...)
-- `plugins/context_engine/` — 컨텍스트 엔진 대체 구현 → [07](07_prompt_context.md)
+- `plugins/context_engine/` — 컨텍스트 엔진 ([용어사전](../dict/04_prompt_context.md#context-engine)) 대체 구현 → [07](07_prompt_context.md)
 - `plugins/kanban/` — 멀티 에이전트 보드 디스패처 + 워커
 - `plugins/observability/` — 지표/트레이스/로그
 - `plugins/image_gen/`, `plugins/platforms/` 등
@@ -149,7 +149,7 @@ local / docker / ssh / modal / daytona / singularity 백엔드가 구현되어 �
   에이전트를 **병렬 배치 실행**하고, 체크포인트로 중단 지점부터 재개하며, 궤적을
   from/value 쌍 형식으로 저장합니다(1-21행 docstring).
 - [`mini_swe_runner.py`](../mini_swe_runner.py) — SWE(소프트웨어 엔지니어링) 과제용
-  러너. Hermes의 실행 환경(local/docker/modal)을 재사용해 명령을 돌리고, 궤적을
+  러너. Hermes의 실행 환경 ([용어사전](../dict/09_execution_infra.md#execution-environment))(local/docker/modal)을 재사용해 명령을 돌리고, 궤적을
   `batch_runner.py`와 호환되는 Hermes 형식으로 출력합니다(1-14행 docstring).
 - [`trajectory_compressor.py`](../trajectory_compressor.py) — 완성된 궤적을 목표
   토큰 예산 안으로 **후처리 압축**합니다. 앞/뒤 턴은 보호하고 중간만 압축하는 전략

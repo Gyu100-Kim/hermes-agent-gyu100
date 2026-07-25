@@ -22,11 +22,11 @@ Agents 등)의 히스토리를 정리한 뒤 Hermes 코드와 연결합니다.
 
 ## 1. 핵심 정의
 
-**자기개선 에이전트(self-improving agent)** 란, 작업을 수행하며 얻은 경험을
+**자기개선 에이전트 ([용어사전](../../dict/05_memory_self_improvement.md#self-improving-agent))(self-improving agent)** 란, 작업을 수행하며 얻은 경험을
 **재사용 가능한 지식**으로 축적하고, 그 지식을 다음 작업에 활용해 **시간이 지날수록
 더 잘하게 되는** 에이전트입니다.
 
-중요한 구분: 여기서 말하는 "학습"은 대부분 **모델 가중치를 바꾸는 학습(파인튜닝)이
+중요한 구분: 여기서 말하는 "학습"은 대부분 **모델 가중치를 바꾸는 학습(파인튜닝 ([용어사전](../../dict/13_model_learning.md#fine-tuning)))이
 아닙니다**. 모델은 그대로 두고, 모델에게 주는 **프롬프트와 외부 저장소(파일, DB)**
 를 개선하는 방식입니다. 이를 흔히 **in-context learning 기반의 지속 학습**이라
 부릅니다. 장점은:
@@ -64,10 +64,10 @@ Agents 등)의 히스토리를 정리한 뒤 Hermes 코드와 연결합니다.
 ### 2-2. Progressive disclosure (점진적 공개)
 
 스킬이 수십~수백 개가 되면 전부를 프롬프트에 넣을 수 없습니다(토큰 비용).
-**점진적 공개**는 이를 해결하는 계층화 전략입니다:
+**점진적 공개 ([용어사전](../../dict/05_memory_self_improvement.md#progressive-disclosure))**는 이를 해결하는 계층화 전략입니다:
 
 - **1단계 — 색인(index)**: 모든 스킬의 "이름 + 한 줄 설명"만 시스템 프롬프트에 상주.
-- **2단계 — 본문(body)**: 모델이 관련 있다고 판단한 스킬만 도구 호출(`skill_view`)로
+- **2단계 — 본문(body)**: 모델이 관련 있다고 판단한 스킬만 도구 호출 ([용어사전](../../dict/02_agent_core.md#tool-calling))(`skill_view`)로
   본문을 로드.
 - **3단계 — 자원(resources)**: 스킬에 딸린 스크립트/데이터는 실행할 때만 접근.
 
@@ -78,7 +78,7 @@ Agents 등)의 히스토리를 정리한 뒤 Hermes 코드와 연결합니다.
 ### 2-3. 큐레이션 (curation)
 
 지식이 쌓이기만 하면 **오염**됩니다: 중복 스킬, 낡은 정보, 서로 모순되는 항목.
-**큐레이터**는 백그라운드에서 라이브러리를 정비하는 프로세스입니다. 안전한 큐레이션의
+**큐레이터 ([용어사전](../../dict/05_memory_self_improvement.md#curator))**는 백그라운드에서 라이브러리를 정비하는 프로세스입니다. 안전한 큐레이션의
 원칙(Hermes가 불변식으로 채택):
 
 - **비파괴(non-destructive)**: 삭제 대신 보관(archive) — 잘못 지운 지식은 복구가
@@ -99,7 +99,7 @@ Self-Refine(2023)은 같은 아이디어를 단일 응답 개선에 적용했습
 Generative Agents(2023)가 "기억 스트림 + 중요도 기반 회상 + 주기적 반성(reflection)"
 구조로 유명해졌고, MemGPT(2023)는 운영체제의 가상 메모리처럼 "메인 컨텍스트 ↔ 외부
 저장소" 사이를 페이징하는 구조를 제안했습니다. 상용/오픈소스 구현으로 mem0,
-Honcho([07_honcho_dialectic.md](07_honcho_dialectic.md)), supermemory 등이 있습니다.
+Honcho ([용어사전](../../dict/05_memory_self_improvement.md#honcho))([07_honcho_dialectic.md](07_honcho_dialectic.md)), supermemory 등이 있습니다.
 
 ---
 
@@ -119,10 +119,10 @@ graph TD
 ```
 
 - 전체가 **순환 루프**입니다: 경험 → 지식 → 더 나은 수행 → 새 경험.
-- 이 루프는 [01_tool_calling.md](01_tool_calling.md)의 도구 호출 루프 **바깥**을
+- 이 루프는 [01_tool_calling.md](01_tool_calling.md)의 도구 호출 루프 ([용어사전](../../dict/02_agent_core.md#tool-calling-loop)) **바깥**을
   도는 더 느린 루프입니다 (안쪽 루프: 초 단위, 자기개선 루프: 세션~일 단위).
 - 메모리 주입은 [03_context_compression.md](03_context_compression.md)의 컨텍스트
-  예산 문제와 직결되고, 사용자 모델링 축은
+  예산 문제와 직결되고, 사용자 모델링 ([용어사전](../../dict/05_memory_self_improvement.md#user-modeling)) 축은
   [07_honcho_dialectic.md](07_honcho_dialectic.md)로 이어집니다.
 
 ---
@@ -140,7 +140,7 @@ graph TD
 4. **2023.05 — Voyager** (Wang et al., NVIDIA): 마인크래프트에서 **평생 학습
    (lifelong learning)** 에이전트를 구현. 성공한 행동을 검증된 코드로 저장하는
    **skill library**를 도입했고, 이것이 "스킬 축적형 자기개선"의 원형입니다.
-5. **2023.10 — MemGPT** (Packer et al.): LLM 컨텍스트를 OS 메모리 계층처럼 관리 —
+5. **2023.10 — MemGPT** (Packer et al.): LLM ([용어사전](../../dict/01_llm_basics.md#llm)) 컨텍스트를 OS 메모리 계층처럼 관리 —
    메인 컨텍스트(RAM)와 외부 저장소(디스크) 사이를 에이전트 스스로 페이징. 이후
    Letta로 발전했습니다.
 6. **2024~ — 제품화 단계**: mem0, Honcho 같은 메모리 서비스, Anthropic의 Claude
@@ -173,14 +173,14 @@ graph TD
   구조 그대로입니다. 실물 예:
   [`skills/creative/ascii-art/SKILL.md`](../../skills/creative/ascii-art/SKILL.md)
 - **스킬 획득(`/learn`)**: `agent/learn_prompt.py`가 경험/문서/코드를 스킬로 정제하는
-  표준 프롬프트를 생성. 별도 증류 엔진이나 새 코어 도구 없이 기존 도구
+  표준 프롬프트를 생성. 별도 증류 엔진이나 새 코어 도구 ([용어사전](../../dict/03_tool_system.md#core-tools)) 없이 기존 도구
   (`skill_manage`)로 수행(18-22행) — 자기개선조차 "narrow waist" 원칙을 지킵니다.
 - **큐레이션**: `agent/curator.py`가 유휴 시(inactivity-triggered) 포크된 에이전트로
   스킬을 정비하되, **에이전트 생성 스킬만 / 삭제 없이 보관만 / 핀 고정 존중 /
   메인 세션 프롬프트 캐시 불침해**의 불변식(15-19행)을 지킴 — 2-3절의 안전 원칙
   그대로입니다.
 - **장기 기억**: `agent/memory_manager.py`가 파일 기반 `MEMORY.md`/`USER.md`와
-  외부 provider(Honcho/mem0/supermemory 플러그인)를 단일 지점에서 오케스트레이션.
+  외부 provider(Honcho/mem0/supermemory 플러그인)를 단일 지점에서 오케스트레이션 ([용어사전](../../dict/02_agent_core.md#orchestration)).
   외부 provider는 동시에 하나만 허용됩니다.
 - **학습 가시화**: `agent/learning_graph.py`가 학습된 스킬과 메모리 청크를 노드로,
   선언된 관련성(`related_skills`)과 어휘 중첩을 엣지로 하는 그래프를 만들어

@@ -2,9 +2,9 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-에이전트가 **외부 도구/데이터**와 연결되는 방식(MCP)과, 에이전트가 **클라이언트
-(에디터 등)** 에 연결되는 방식(ACP)을 다룹니다. 두 프로토콜 모두 "표준 프로토콜로
-결합을 느슨하게"라는 같은 철학을 가지며, 그 뿌리는 LSP(Language Server Protocol)의
+에이전트가 **외부 도구/데이터**와 연결되는 방식(MCP ([용어사전](../../dict/08_protocols.md#mcp)))과, 에이전트가 **클라이언트
+(에디터 등)** 에 연결되는 방식(ACP ([용어사전](../../dict/08_protocols.md#acp)))을 다룹니다. 두 프로토콜 모두 "표준 프로토콜로
+결합을 느슨하게"라는 같은 철학을 가지며, 그 뿌리는 LSP ([용어사전](../../dict/08_protocols.md#lsp))(Language Server Protocol)의
 성공에 있습니다. 프로토콜을 이해하는 데 필요한 하위 개념(JSON-RPC, 전송 계층,
 N×M 문제, 클라이언트/서버/호스트 역할, 도구·리소스·프롬프트 프리미티브)을 상세히
 풀고, 둘의 관계와 히스토리, 보안 문제, Hermes 구현을 연결합니다.
@@ -44,7 +44,7 @@ N×M 문제, 클라이언트/서버/호스트 역할, 도구·리소스·프롬�
 
 두 프로그램이 "함수 호출처럼 보이는 메시지"를 JSON으로 주고받는 경량 원격 호출
 규격입니다. 요청은 `{"jsonrpc": "2.0", "method": "...", "params": {...}, "id": 1}`,
-응답은 같은 `id`로 돌아옵니다. LSP, MCP, ACP 모두 JSON-RPC 2.0 위에 만들어져
+응답은 같은 `id`로 돌아옵니다. LSP, MCP, ACP 모두 JSON-RPC 2.0 ([용어사전](../../dict/08_protocols.md#json-rpc)) 위에 만들어져
 있습니다 — 표준 프로토콜들이 같은 밑바탕을 공유하는 셈입니다.
 
 ### 2-2. 전송 계층 (transport)
@@ -54,8 +54,8 @@ JSON-RPC 메시지를 실제로 나르는 통로입니다:
 - **stdio**: 서버를 자식 프로세스로 띄우고 stdin/stdout으로 통신. 로컬에서 가장
   간단하고, 네트워크 노출이 없어 안전합니다. 단, **stdout은 프로토콜 전용**이
   되므로 로그는 stderr로 보내야 합니다(이 규칙을 어기면 프로토콜이 깨집니다).
-- **HTTP / Streamable HTTP**: 원격 서버용. 요청-응답에 스트리밍 응답을 결합.
-- **SSE(Server-Sent Events)**: 서버→클라이언트 단방향 스트림. MCP 초기 원격
+- **HTTP / Streamable HTTP ([용어사전](../../dict/08_protocols.md#streamable-http))**: 원격 서버용. 요청-응답에 스트리밍 응답을 결합.
+- **SSE ([용어사전](../../dict/08_protocols.md#sse))(Server-Sent Events)**: 서버→클라이언트 단방향 스트림. MCP 초기 원격
   전송이었고 이후 Streamable HTTP로 대체되는 흐름입니다.
 
 ### 2-3. 역할 용어: 호스트 / 클라이언트 / 서버
@@ -74,12 +74,12 @@ MCP 사양의 용어가 처음엔 헷갈립니다:
 
 MCP 서버가 광고할 수 있는 것은 도구만이 아닙니다:
 
-1. **도구(tools)**: 모델이 호출하는 함수 (JSON Schema 포함 — [01](01_tool_calling.md)
+1. **도구(tools)**: 모델이 호출하는 함수 (JSON Schema ([용어사전](../../dict/03_tool_system.md#json-schema)) 포함 — [01](01_tool_calling.md)
    2-1절과 같은 형식). 가장 널리 쓰입니다.
 2. **리소스(resources)**: 읽기 전용 데이터(파일, DB 레코드)를 URI로 노출.
 3. **프롬프트(prompts)**: 재사용 가능한 프롬프트 템플릿.
 
-이 밖에 **샘플링(sampling)** — 서버가 거꾸로 호스트의 LLM에게 생성을 요청하는
+이 밖에 **샘플링(sampling)** — 서버가 거꾸로 호스트의 LLM ([용어사전](../../dict/01_llm_basics.md#llm))에게 생성을 요청하는
 역방향 프리미티브 — 도 사양에 있습니다.
 
 ### 2-5. 능력 협상 (capability negotiation)
@@ -122,7 +122,7 @@ OpenAI(2025.03), Google 등 경쟁사들도 클라이언트 지원을 발표해 
 - 에디터가 에이전트를 자식 프로세스로 띄우고 **stdio 위의 JSON-RPC**로 대화합니다
   (LSP와 같은 배치 구조 — "language server 자리에 agent가 들어간 LSP"로 이해하면
   쉽습니다).
-- 세션 생성, 사용자 메시지 전달, 에이전트의 스트리밍 응답/도구 호출 표시, 권한
+- 세션 생성, 사용자 메시지 전달, 에이전트의 스트리밍 응답/도구 호출 ([용어사전](../../dict/02_agent_core.md#tool-calling)) 표시, 권한
   요청(파일 수정 승인 등)을 표준 메시지로 정의합니다.
 - 효과: 에이전트 하나를 만들면 ACP를 지원하는 모든 에디터(Zed, Neovim 플러그인
   등)에서 쓸 수 있고, 사용자는 같은 에디터 UI에서 에이전트를 갈아끼울 수 있습니다.
@@ -157,7 +157,7 @@ graph LR
 
 - 둘은 **보완적**입니다: ACP는 에이전트의 "얼굴" 쪽, MCP는 "손발" 쪽 표준.
 - 둘 다 JSON-RPC(2-1절) + stdio(2-2절) 조합이라는 공통 기반을 공유합니다.
-- MCP 도구는 결국 [01_tool_calling.md](01_tool_calling.md)의 도구 스키마/디스패치
+- MCP 도구는 결국 [01_tool_calling.md](01_tool_calling.md)의 도구 스키마 ([용어사전](../../dict/03_tool_system.md#tool-schema))/디스패치 ([용어사전](../../dict/03_tool_system.md#dispatch))
   개념으로 수렴합니다 — 프로토콜은 "도구가 어디서 오는가"만 바꿉니다.
 
 ---
@@ -181,7 +181,7 @@ graph LR
 
 표준화는 통합을 쉽게 하지만, **신뢰 경계**를 흐리게 합니다:
 
-- **악성/오염된 MCP 서버**: 서버가 광고하는 도구 설명 자체가 프롬프트 인젝션을
+- **악성/오염된 MCP 서버 ([용어사전](../../dict/08_protocols.md#mcp-server))**: 서버가 광고하는 도구 설명 자체가 프롬프트 인젝션을
   담을 수 있습니다(tool poisoning). 도구 결과도 신뢰할 수 없는 입력입니다.
 - **혼동된 대리인 문제(confused deputy)**: 에이전트가 A 서버에서 읽은 악성 지시로
   B 서버의 강력한 도구를 호출하게 유도될 수 있습니다.
@@ -193,7 +193,7 @@ graph LR
 
 ## 8. 이 저장소에서의 구현 연결
 
-- **MCP 클라이언트**: `tools/mcp_tool.py`가 외부 MCP 서버에 stdio/HTTP/StreamableHTTP/
+- **MCP 클라이언트 ([용어사전](../../dict/08_protocols.md#mcp-client))**: `tools/mcp_tool.py`가 외부 MCP 서버에 stdio/HTTP/StreamableHTTP/
   SSE(2-2절)로 접속해 도구를 발견하고, **Hermes 도구 레지스트리에 등록**해 내장
   도구처럼 부르게 합니다(3절의 "구별되지 않음"의 구현).
   [`tools/mcp_tool.py` 2-11행](../../tools/mcp_tool.py#L2-L11)

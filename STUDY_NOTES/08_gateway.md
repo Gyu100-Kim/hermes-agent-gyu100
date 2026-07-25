@@ -2,7 +2,7 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-**게이트웨이(gateway)** 는 Telegram·Discord·Slack 등 ~20개 메시징 플랫폼을 하나의
+**게이트웨이 ([용어사전](../dict/07_gateway_interfaces.md#gateway))(gateway)** 는 Telegram·Discord·Slack 등 ~20개 메시징 플랫폼을 하나의
 상시 실행 프로세스에서 받아, 모두 동일한 에이전트 코어([04](04_agent_loop.md))로
 연결하는 서비스입니다. "코어는 하나, 얼굴은 여러 개"에서 가장 많은 얼굴을 만드는
 부분입니다.
@@ -33,7 +33,7 @@ GatewayRunner (gateway/run.py)   ← 전체 생명주기 관리
 - 여러 플랫폼의 서로 다른 API/이벤트를 **하나의 공통 형식**으로 정규화
 - 각 대화의 **세션을 추적**하고 필요 시 이어가기/새로 시작
 - 에이전트의 응답을 **원래 온 곳(또는 지정한 곳)** 으로 정확히 되돌려 보내기
-- 인가(authorization), 슬래시 명령, cron 전달 등 부가 기능
+- 인가(authorization), 슬래시 명령 ([용어사전](../dict/07_gateway_interfaces.md#slash-command)), cron 전달 등 부가 기능
 
 `gateway/run.py`는 무려 24,000줄이 넘는 가장 큰 파일 중 하나입니다. `AGENTS.md`가
 이 god-file을 믹스인으로 쪼개는 작업을 "원하는 일"로 명시합니다.
@@ -92,7 +92,7 @@ _AUTO_CONTINUE_FRESHNESS_SECS_DEFAULT = 60 * 60   # 1시간
 `agent.gateway_auto_continue_freshness`를 `run.py`가 환경변수
 `HERMES_AUTO_CONTINUE_FRESHNESS`로 브리지해서 설정합니다(34-36행 주석).
 
-> **연결:** 세션 자체는 [06](06_state.md)의 SQLite에 저장됩니다. 게이트웨이는 그
+> **연결:** 세션 자체는 [06](06_state.md)의 SQLite ([용어사전](../dict/06_state_retrieval.md#sqlite))에 저장됩니다. 게이트웨이는 그
 > 위에서 "언제 이어가고 언제 새로 시작할지" 정책만 얹습니다.
 
 ---
@@ -152,7 +152,7 @@ msgraph 등). Telegram/Discord/Slack 같은 대형 플랫폼과 다수의 플러
   `plugin.yaml` + `adapter.py`를 만들고, `BasePlatformAdapter`를 상속해
   `register(ctx)`에서 `ctx.register_platform()`으로 등록합니다. **코어 코드 변경이
   전혀 필요 없습니다(zero changes to core).** 플러그인 시스템이 어댑터 생성, 설정
-  파싱, 인가, cron 전달, 메시지 전송 라우팅, 시스템 프롬프트 힌트, 상태 표시를
+  파싱, 인가, cron 전달, 메시지 전송 라우팅, 시스템 프롬프트 ([용어사전](../dict/01_llm_basics.md#system-prompt)) 힌트, 상태 표시를
   자동으로 처리합니다.
 - **내장 경로(코어 기여자 전용)**(78행~): 코어에 직접 통합. 체크리스트가 길고,
   `AGENTS.md`의 "좁은 허리" 철학상 특별한 이유가 없으면 플러그인 경로를 씁니다.

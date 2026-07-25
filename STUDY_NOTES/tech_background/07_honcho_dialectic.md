@@ -4,7 +4,7 @@
 
 에이전트가 사용자를 **이해하고 개인화**하기 위한 사용자 모델링을 다룹니다. 특히
 "사실을 나열해 저장"하는 전통적 메모리를 넘어, **필요할 때 근거로부터 추론을
-합성**하는 Honcho의 변증법적(dialectic) 접근을 봅니다. 사용자 모델링/마음 이론/
+합성**하는 Honcho ([용어사전](../../dict/05_memory_self_improvement.md#honcho))의 변증법적(dialectic) 접근을 봅니다. 사용자 모델링 ([용어사전](../../dict/05_memory_self_improvement.md#user-modeling))/마음 이론 ([용어사전](../../dict/05_memory_self_improvement.md#theory-of-mind))/
 표상 학습 같은 하위 개념을 상세히 풀고, 개인화 기술의 히스토리와 근간 아이디어,
 그리고 Hermes에서 Honcho가 "플러그인"이라는 위치에 놓인 설계 이유를 연결합니다.
 
@@ -35,7 +35,7 @@
   합성**해 돌려줍니다.
 
 "변증법적"이라는 이름은 문답을 통해 결론을 다듬는 철학적 방법(소크라테스 문답법,
-정-반-합)에서 왔습니다: 고정된 프로필 필드를 읽는 게 아니라, **질문 ↔ 근거의
+정-반-합)에서 왔습니다: 고정된 프로필 ([용어사전](../../dict/07_gateway_interfaces.md#profile)) 필드를 읽는 게 아니라, **질문 ↔ 근거의
 대화**로 사용자에 대한 이해를 그때그때 구성한다는 뜻입니다.
 
 ---
@@ -53,7 +53,7 @@
 
 ### 2-2. 사실 추출형 메모리 (fact extraction)
 
-현재 가장 흔한 구현: 보조 LLM이 대화에서 "기억할 가치가 있는 사실"을 추출해
+현재 가장 흔한 구현: 보조 LLM ([용어사전](../../dict/01_llm_basics.md#llm))이 대화에서 "기억할 가치가 있는 사실"을 추출해
 저장하고(mem0 등), 다음 세션 프롬프트에 주입합니다. 한계:
 
 - **표면적**: "무엇을 말했는가"는 담지만 "왜/어떤 사람이라서"는 못 담습니다.
@@ -153,7 +153,7 @@ graph TD
 
 ## 6. 이 저장소에서의 구현 연결
 
-- **오케스트레이션**: Hermes의 메모리는 `agent/memory_manager.py`가 단일 지점에서
+- **오케스트레이션 ([용어사전](../../dict/02_agent_core.md#orchestration))**: Hermes의 메모리는 `agent/memory_manager.py`가 단일 지점에서
   관리합니다([09_self_improvement.md](../09_self_improvement.md)). 기본은
   `MEMORY.md`/`USER.md` **파일 기반(로컬 기본값)** 이고, **외부 provider는 한 번에
   하나만** 허용됩니다(6-8행) — 스키마 비대와 백엔드 충돌 방지.
@@ -165,7 +165,7 @@ graph TD
   이 위치는 Footprint Ladder의 "service-gated / plugin" 단계와 일치합니다 —
   강력하지만 모두에게 필수는 아니므로 코어가 아닌 가장자리에, 옵트인으로 둡니다.
 - **provider 인터페이스**(2-5절): 메모리 provider는 `MemoryProvider`
-  (`agent/memory_provider.py`)를 구현하며, 매니저가 시스템 프롬프트 주입
+  (`agent/memory_provider.py`)를 구현하며, 매니저가 시스템 프롬프트 ([용어사전](../../dict/01_llm_basics.md#system-prompt)) 주입
   (`build_system_prompt`)·턴 전 prefetch·턴 후 sync를 표준 훅으로 호출합니다.
   Honcho 같은 dialectic provider도 이 훅 위에서 "질의→추론"을 수행합니다.
 - **egress 살균**(5절): provider 컨텍스트는 경계에서 살균됩니다

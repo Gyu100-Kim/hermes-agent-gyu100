@@ -2,9 +2,9 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-이 문서는 Hermes의 동작 원리 그 자체인 **도구 호출(tool-calling / function-calling)**
+이 문서는 Hermes의 동작 원리 그 자체인 **도구 호출 ([용어사전](../../dict/02_agent_core.md#tool-calling))(tool-calling / function-calling)**
 을 깊이 있게 다룹니다. 먼저 개념을 아주 쉬운 비유부터 정의하고, 이 개념을 이해하는
-데 필요한 하위 개념들(스키마, 디스패치, ReAct 패턴, 에이전트 루프, 반복 예산 등)을
+데 필요한 하위 개념들(스키마, 디스패치 ([용어사전](../../dict/03_tool_system.md#dispatch)), ReAct 패턴 ([용어사전](../../dict/02_agent_core.md#react)), 에이전트 루프, 반복 예산 ([용어사전](../../dict/02_agent_core.md#iteration-budget)) 등)을
 하나씩 풀어낸 뒤, 개념들 사이의 관계를 그림으로 정리합니다. 마지막으로 이 기술이
 어떤 논문·기술 문서에 근간을 두고 발전해 왔는지 연대기로 살펴보고, Hermes 코드와
 연결합니다.
@@ -22,7 +22,7 @@
 
 ## 1. 핵심 정의: 말만 하는 챗봇에서 행동하는 에이전트로
 
-**LLM(대형 언어 모델)** 은 본질적으로 "다음 단어를 예측하는" 텍스트 생성기입니다.
+**LLM ([용어사전](../../dict/01_llm_basics.md#llm))(대형 언어 모델)** 은 본질적으로 "다음 단어를 예측하는" 텍스트 생성기입니다.
 그 자체로는 계산기도 못 두드리고, 파일도 못 읽고, 오늘 날씨도 모릅니다.
 
 **함수 호출(function calling)** 혹은 **도구 호출(tool calling)** 은 이 한계를 깨는
@@ -47,7 +47,7 @@
 목표 수신 → [생각 → 도구 호출 → 결과 관찰] × N회 → 최종 답변
 ```
 
-이 대괄호 부분의 반복을 **도구 호출 루프(tool-calling loop)** 라고 부르며, Hermes
+이 대괄호 부분의 반복을 **도구 호출 루프 ([용어사전](../../dict/02_agent_core.md#tool-calling-loop))(tool-calling loop)** 라고 부르며, Hermes
 에서는 `agent/conversation_loop.py`의 `run_conversation`이 이 루프입니다
 ([04_agent_loop.md](../04_agent_loop.md)).
 
@@ -64,7 +64,7 @@ tool-calling 하나를 제대로 이해하려면 아래 하위 개념들이 필�
 - `name` — 함수 이름 (예: `read_file`)
 - `description` — 언제/왜 쓰는지 자연어 설명. **모델이 도구를 고르는 유일한 단서**
   이므로 사실상 "도구용 프롬프트"입니다.
-- `parameters` — 인자들의 이름·타입·설명을 담은 **JSON Schema**. JSON Schema는
+- `parameters` — 인자들의 이름·타입·설명을 담은 **JSON Schema ([용어사전](../../dict/03_tool_system.md#json-schema))**. JSON Schema는
   "이 JSON은 이런 모양이어야 한다"를 기술하는 표준 규격입니다.
 
 중요한 비용 특성: **스키마 전체가 매 API 호출마다 모델에게 전송**됩니다. 도구가
@@ -77,9 +77,9 @@ tool-calling 하나를 제대로 이해하려면 아래 하위 개념들이 필�
 모델이 내놓은 `{"name": ..., "arguments": ...}`를 받아 **실제 함수를 찾아 실행**하는
 과정입니다. 하위 요소:
 
-- **레지스트리(registry)**: 이름 → (스키마, 핸들러) 매핑을 보관하는 자료구조.
+- **레지스트리(registry)**: 이름 → (스키마, 핸들러 ([용어사전](../../dict/03_tool_system.md#handler))) 매핑을 보관하는 자료구조.
 - **핸들러(handler)**: 실제로 일하는 파이썬 함수.
-- **결과 정규화(result normalization)**: 핸들러가 무엇을 반환하든(문자열/딕셔너리/
+- **결과 정규화 ([용어사전](../../dict/03_tool_system.md#result-normalization))(result normalization)**: 핸들러가 무엇을 반환하든(문자열/딕셔너리/
   이미지) 모델에게 돌려줄 일관된 형태로 변환.
 - **오류 봉투(error envelope)**: 도구가 예외를 던져도 루프가 죽지 않도록
   `{"error": "..."}` JSON으로 감싸 모델에게 "실패했음"을 알려주는 관례. 모델은
@@ -109,7 +109,7 @@ tool-calling 하나를 제대로 이해하려면 아래 하위 개념들이 필�
 assistant(tool_calls 포함) → tool(각 호출의 결과) → assistant(다음 응답) → ...
 ```
 
-- 같은 역할이 연속으로 두 번 오면 안 되고(역할 교대 불변식), `tool` 메시지는 반드시
+- 같은 역할이 연속으로 두 번 오면 안 되고(역할 교대 불변식 ([용어사전](../../dict/02_agent_core.md#role-alternation))), `tool` 메시지는 반드시
   대응하는 `tool_call_id`를 가져야 합니다.
 - 이 규칙이 깨지면 API가 요청을 거부하거나, **프롬프트 캐시**(아래)가 무효화됩니다.
 - Hermes의 `AGENTS.md`가 역할 교대를 "불변식(invariant)"으로 못 박는 이유입니다.
@@ -164,7 +164,7 @@ graph TD
   입니다.
 - **스키마**는 모델의 입력 쪽, **디스패치**는 출력 쪽을 담당하며, 루프가 둘을
   반복적으로 잇습니다.
-- **역할 교대**와 **프롬프트 캐싱**은 루프가 길어질수록 중요해지는 "운영 불변식"
+- **역할 교대**와 **프롬프트 캐싱 ([용어사전](../../dict/01_llm_basics.md#prompt-caching))**은 루프가 길어질수록 중요해지는 "운영 불변식"
   이며, **반복 예산**은 루프의 "브레이크"입니다.
 - 이 문서의 루프 개념은 [03_context_compression.md](03_context_compression.md)
   (루프가 길어지면 컨텍스트가 넘침)와 [09_execution_environments.md](09_execution_environments.md)
@@ -174,7 +174,7 @@ graph TD
 
 ## 4. 히스토리와 근간 논문 (연대기)
 
-1. **2017 — Transformer** (Vaswani et al., "Attention Is All You Need"): 오늘날
+1. **2017 — Transformer ([용어사전](../../dict/01_llm_basics.md#transformer))** (Vaswani et al., "Attention ([용어사전](../../dict/01_llm_basics.md#attention)) Is All You Need"): 오늘날
    모든 LLM의 아키텍처 기반. 도구 호출 자체와는 무관하지만 전제 조건입니다.
 2. **2021.12 — WebGPT** (OpenAI): GPT-3에게 텍스트 브라우저 명령("검색", "클릭",
    "인용")을 내리게 학습시켜, LLM이 **외부 도구로 사실성을 높일 수 있음**을 초기
@@ -196,14 +196,14 @@ graph TD
 8. **2023.06 — OpenAI 네이티브 함수 호출**: `gpt-4-0613`/`gpt-3.5-turbo-0613`에서
    API 수준의 함수 호출 도입. 모델이 JSON Schema에 맞는 호출을 **구조적으로**
    반환하게 되어 텍스트 파싱 취약성이 사라졌습니다. 이후 Anthropic(tool use),
-   Google(function calling) 등 모든 주요 제공자가 채택했고, **병렬 도구 호출**
+   Google(function calling) 등 모든 주요 제공자가 채택했고, **병렬 도구 호출 ([용어사전](../../dict/02_agent_core.md#parallel-tool-calls))**
    (2023.11, OpenAI)도 표준이 되었습니다.
 9. **2023.10 — SWE-bench** (Jimenez et al.): 실제 GitHub 이슈를 해결하는 능력을
-   측정하는 벤치마크. 도구 호출 에이전트의 **long-horizon 실전 능력**을 재는 사실상
+   측정하는 벤치마크 ([용어사전](../../dict/13_model_learning.md#benchmark)). 도구 호출 에이전트의 **long-horizon 실전 능력**을 재는 사실상
    표준이 되었으며, 오늘날의 코딩 에이전트 붐(Hermes 같은 프로젝트 포함)을
    가속했습니다.
 10. **2024~ — 에이전트 프레임워크의 성숙**: 다중 에이전트, 위임(delegation), 컨텍스트
-    압축, MCP([05_mcp_and_acp.md](05_mcp_and_acp.md)) 같은 표준 프로토콜이 등장하며
+    압축, MCP ([용어사전](../../dict/08_protocols.md#mcp))([05_mcp_and_acp.md](05_mcp_and_acp.md)) 같은 표준 프로토콜이 등장하며
     "루프 자체"보다 **루프 주변의 운영 문제**(비용, 캐시, 보안, 관측)가 연구/공학의
     중심이 되었습니다.
 
@@ -242,8 +242,8 @@ Hermes는 위 개념들을 정면으로 구현합니다.
 - **역할 교대와 캐시**: `AGENTS.md`의 두 불변식("role alternation", "prompt caching
   is sacred")이 2-4/2-5절에 해당하며, 사용자 중간 개입(redirect)조차 이 불변식을
   지키며 끼워 넣습니다([04](../04_agent_loop.md) 5절).
-- **프롬프트 인젝션 방어**: 웹훅용 축소 도구 집합 `_HERMES_WEBHOOK_SAFE_TOOLS`
-  ([05](../05_tools.md) 2절)와 컨텍스트 파일 위협 스캔([07](../07_prompt_context.md))
+- **프롬프트 인젝션 ([용어사전](../../dict/10_security.md#prompt-injection)) 방어**: 웹훅용 축소 도구 집합 `_HERMES_WEBHOOK_SAFE_TOOLS`
+  ([05](../05_tools.md) 2절)와 컨텍스트 파일 ([용어사전](../../dict/04_prompt_context.md#context-file)) 위협 스캔([07](../07_prompt_context.md))
   이 5절의 보안 난제에 대한 Hermes의 답입니다.
 
 ---

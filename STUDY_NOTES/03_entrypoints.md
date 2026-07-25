@@ -39,7 +39,7 @@ hermes-acp = "acp_adapter.entry:main"
 - **`hermes`** → `hermes_cli/main.py`의 `main()`. 사람 대부분이 쓰는 진입점.
 - **`hermes-agent`** → `run_agent.py`의 `main()`. 에이전트 러너를 직접 실행(스크립트/
   배치용). 코어인 `AIAgent`가 여기 있습니다 → [04](04_agent_loop.md).
-- **`hermes-acp`** → `acp_adapter/entry.py`의 `main()`. 에디터 통합용 ACP 서버
+- **`hermes-acp`** → `acp_adapter/entry.py`의 `main()`. 에디터 통합용 ACP ([용어사전](../dict/08_protocols.md#acp)) 서버
   → [10](10_subsystems.md).
 
 이 문서는 가장 흔한 `hermes` 경로를 따라갑니다.
@@ -119,7 +119,7 @@ build_model_parser(subparsers, cmd_model=cmd_model)   # model → cmd_model
 ...
 ```
 (14393-14416행) — 각 하위 파서에 `set_defaults(func=...)`로 **실행할 함수**를
-심어둡니다. 이게 argparse의 흔한 디스패치 패턴입니다.
+심어둡니다. 이게 argparse의 흔한 디스패치 ([용어사전](../dict/03_tool_system.md#dispatch)) 패턴입니다.
 
 ### 3-3. 실제 디스패치
 [`hermes_cli/main.py` 16420-16441행](../hermes_cli/main.py#L16420-L16441)
@@ -145,7 +145,7 @@ else:
 [`hermes_cli/main.py` 2444-2483행](../hermes_cli/main.py#L2444-L2483)
 `cmd_chat(args)`(2444행)가 대화형 세션을 시작합니다. 주요 초기 처리:
 
-- `use_tui = _resolve_use_tui(args)` (2446행) — TUI로 띄울지 클래식 REPL로 띄울지
+- `use_tui = _resolve_use_tui(args)` (2446행) — TUI ([용어사전](../dict/07_gateway_interfaces.md#tui))로 띄울지 클래식 REPL ([용어사전](../dict/07_gateway_interfaces.md#repl))로 띄울지
   결정. (`--cli` > `--tui`/`HERMES_TUI` > 실제 TTY 여부 > 설정 순서. 이 결정의
   가장 이른 버전은 파일 상단 `_wants_tui_early()` 294행에 있습니다.)
 - `--continue`/`-c` 처리(2451-2473행) — 이름/ID로 이전 세션을 찾아 `--resume`으로
@@ -154,7 +154,7 @@ else:
 - **세션↔작업공간 바인딩**(2484행~) — 재개(resume)한 세션이 기록해둔 작업
   디렉토리(cwd)로 다시 `cd` 해서 "떠났던 그 저장소에서" 이어가게 함.
 
-> **개념: 세션(session)** — 하나의 연속된 대화. Hermes는 세션을 SQLite에 저장하며
+> **개념: 세션(session)** — 하나의 연속된 대화. Hermes는 세션을 SQLite ([용어사전](../dict/06_state_retrieval.md#sqlite))에 저장하며
 > (→ [06](06_state.md)), 그래서 `hermes -c`로 언제든 이어갈 수 있습니다.
 
 ---
@@ -181,12 +181,12 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 
 주목할 점:
 - **믹스인(mixin) 구성**: `HermesCLI`는 3개의 믹스인 클래스를 상속합니다 —
-  `CLIAgentSetupMixin`(에이전트 준비), `CLICommandsMixin`(슬래시 명령),
+  `CLIAgentSetupMixin`(에이전트 준비), `CLICommandsMixin`(슬래시 명령 ([용어사전](../dict/07_gateway_interfaces.md#slash-command))),
   `CLIBillingMixin`(과금 표시). `cli.py`가 16,000줄이 넘는 "god-file"이라, 기능을
   믹스인으로 쪼개 관리합니다. `AGENTS.md`도 이런 god-file을 믹스인/모듈로 쪼개는
   리팩터링을 "원하는 작업"으로 명시합니다.
 - **생성자 인자**가 곧 CLI 옵션과 대응합니다: `model`, `provider`, `toolsets`,
-  `max_turns`(도구 호출 반복 상한, 기본 90 — 서브에이전트와 공유), `resume`(재개할
+  `max_turns`(도구 호출 ([용어사전](../dict/02_agent_core.md#tool-calling)) 반복 상한, 기본 90 — 서브에이전트와 공유), `resume`(재개할
   세션 ID) 등.
 - **설정 로드**: `self.config = CLI_CONFIG`(3920행) 이후 `display` 섹션에서
   표시 옵션(compact, tool_progress, show_reasoning 등)을 읽습니다(3921-3948행).

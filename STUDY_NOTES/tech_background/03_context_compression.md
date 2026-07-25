@@ -2,9 +2,9 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-LLM은 한 번에 처리할 수 있는 텍스트 양(**컨텍스트 윈도우**)에 한계가 있습니다.
+LLM ([용어사전](../../dict/01_llm_basics.md#llm))은 한 번에 처리할 수 있는 텍스트 양(**컨텍스트 윈도우 ([용어사전](../../dict/01_llm_basics.md#context-window))**)에 한계가 있습니다.
 에이전트는 도구 호출 루프를 돌며 대화가 빠르게 길어지므로 이 한계에 자주
-부딪힙니다. 이 문서는 그 대응 기법인 **컨텍스트 압축**을 다룹니다 — 토큰/컨텍스트
+부딪힙니다. 이 문서는 그 대응 기법인 **컨텍스트 압축 ([용어사전](../../dict/04_prompt_context.md#context-compression))**을 다룹니다 — 토큰/컨텍스트
 윈도우/프롬프트 캐시 같은 전제 개념부터, 압축 전략의 종류(삭제/요약/머리·꼬리
 보호), "lost in the middle" 현상, 그리고 압축과 프롬프트 캐시의 근본적 긴장 관계
 까지 하위 개념을 상세히 풀고, 근간 논문과 Hermes 구현을 연결합니다.
@@ -54,15 +54,15 @@ LLM이 텍스트를 처리하는 최소 단위. 대략 영어 단어의 3/4, 한
 1. **잘라내기(truncation) / 슬라이딩 윈도우**: 오래된 메시지를 그냥 삭제.
    구현이 가장 쉽지만, 맨 앞의 **작업 정의**(사용자가 원래 뭘 시켰는지)가 사라지는
    치명적 문제가 있습니다.
-2. **요약 기반 압축(summarization)**: 중간 대화를 LLM으로 요약해 한 덩어리로 대체.
+2. **요약 기반 압축 ([용어사전](../../dict/04_prompt_context.md#summarization))(summarization)**: 중간 대화를 LLM으로 요약해 한 덩어리로 대체.
    정보 보존이 훨씬 좋지만 요약 자체에 모델 호출 비용이 듭니다.
-3. **머리/꼬리 보호(head/tail protection)**: 맨 앞(시스템 프롬프트, 초기 작업 정의)과
+3. **머리/꼬리 보호 ([용어사전](../../dict/04_prompt_context.md#head-tail-protection))(head/tail protection)**: 맨 앞(시스템 프롬프트 ([용어사전](../../dict/01_llm_basics.md#system-prompt)), 초기 작업 정의)과
    맨 뒤(최근 맥락)는 원문 유지하고 **중간만** 요약. 현재의 사실상 표준입니다.
-4. **구조화 요약(structured summary)**: 산문 대신 "해결된 것/미해결인 것/열린 질문"
+4. **구조화 요약 ([용어사전](../../dict/04_prompt_context.md#structured-summary))(structured summary)**: 산문 대신 "해결된 것/미해결인 것/열린 질문"
    같은 템플릿으로 요약 — 후속 작업에 필요한 정보의 누락을 구조적으로 줄입니다.
 5. **토큰 수준 압축(예: LLMLingua)**: 문장을 남기되 덜 중요한 토큰을 제거하는
    프롬프트 압축 연구 계열.
-6. **대안 컨텍스트 엔진**: 요약 대신 그래프/외부 메모리 페이징(MemGPT 방식) 등으로
+6. **대안 컨텍스트 엔진 ([용어사전](../../dict/04_prompt_context.md#context-engine))**: 요약 대신 그래프/외부 메모리 페이징(MemGPT 방식) 등으로
    컨텍스트를 관리하는 접근.
 
 ### 2-2. "Lost in the middle" 현상
@@ -90,8 +90,8 @@ Liu et al.(2023)의 유명한 발견: 긴 컨텍스트에서 모델은 **맨 앞
 ### 2-4. 보조 모델 (auxiliary model)
 
 요약 자체도 LLM 호출입니다. 메인 모델(비싸고 똑똑함)로 요약하면 낭비이므로,
-**값싸고 빠른 보조 모델**로 요약을 수행하는 것이 일반적입니다. 보조 모델은 요약
-외에도 제목 생성, 백그라운드 정비([02](02_self_improving_agents.md)의 큐레이터)
+**값싸고 빠른 보조 모델 ([용어사전](../../dict/01_llm_basics.md#auxiliary-model))**로 요약을 수행하는 것이 일반적입니다. 보조 모델은 요약
+외에도 제목 생성, 백그라운드 정비([02](02_self_improving_agents.md)의 큐레이터 ([용어사전](../../dict/05_memory_self_improvement.md#curator)))
 같은 "본 대화가 아닌 잡무"에 쓰입니다.
 
 ### 2-5. 요약의 안전성 문제 (filter-safe summarization)
@@ -126,7 +126,7 @@ graph TD
 ```
 
 - 압축은 [01](01_tool_calling.md)의 루프가 만들어내는 문제에 대한 해법이고,
-  [06_retrieval_fts5.md](06_retrieval_fts5.md)의 세션 검색(원본은 남아 있으므로
+  [06_retrieval_fts5.md](06_retrieval_fts5.md)의 세션 검색 ([용어사전](../../dict/06_state_retrieval.md#session-search))(원본은 남아 있으므로
   검색 가능)과 상보적입니다.
 - "무엇을 기억으로 승격시킬 것인가"라는 관점에서
   [02_self_improving_agents.md](02_self_improving_agents.md)의 메모리 시스템과도
@@ -139,7 +139,7 @@ graph TD
 1. **초기 (2020~2022)**: 컨텍스트가 2K~4K 토큰이던 시절, 챗봇들은 슬라이딩 윈도우나
    "대화 요약을 프롬프트에 넣기"(LangChain의 ConversationSummaryMemory 류)로
    버텼습니다.
-2. **2023.07 — "Lost in the Middle"** (Liu et al.): 긴 컨텍스트의 U자형 성능 곡선을
+2. **2023.07 — "Lost in the Middle ([용어사전](../../dict/04_prompt_context.md#lost-in-the-middle))"** (Liu et al.): 긴 컨텍스트의 U자형 성능 곡선을
    정량화. "윈도우를 키우는 것만으로는 부족하다"는 인식을 확산시켰습니다.
 3. **2023.10 — MemGPT** (Packer et al.): 컨텍스트를 OS 가상 메모리처럼 계층화하고
    에이전트가 스스로 페이징하게 함 — "압축"을 넘어 "컨텍스트 관리"라는 더 큰 틀을
@@ -176,7 +176,7 @@ graph TD
   [`agent/context_compressor.py` 1-17행](../../agent/context_compressor.py#L1-L17)
   - 구조화된 요약 템플릿(Resolved/Pending — 2-1절 4번, 7-8행)
   - 필터-안전 프리앰블(2-5절, 9행)
-  - 토큰 예산 기반 꼬리 보호(13행), 도구 출력 사전 정리(14행), 반복 압축 시 기존
+  - 토큰 예산 기반 꼬리 보호 ([용어사전](../../dict/04_prompt_context.md#token-budget-tail))(13행), 도구 출력 사전 정리(14행), 반복 압축 시 기존
     요약 보존(12행)
 - **압축이 유일한 프롬프트-캐시 예외**: `agent/system_prompt.py` 1-9행이 "시스템
   프롬프트는 세션당 한 번 만들고, 오직 컨텍스트 압축만 재빌드를 유발한다"고 명시 —
