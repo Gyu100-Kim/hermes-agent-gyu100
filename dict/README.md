@@ -1,6 +1,51 @@
 # 용어 및 개념 사전 (dict/)
 
-`hermes-agent-gyu100` 저장소를 이해하는 데 필요한 주요·세부 용어와 개념 **237개**를 모은 한국어 사전입니다 (예시 포함 항목 118개).
+`hermes-agent-gyu100` 저장소를 이해하는 데 필요한 주요·세부 용어와 개념 **237개**를 모은 한국어 사전입니다. 모든 항목은 서로 링크로 연결되어 있고, 전체가 하나의 **지식 그래프**(노드 = 용어, 엣지 = 관계)를 이룹니다.
+
+## 한눈에 보기
+
+| 항목 | 값 |
+|---|---|
+| 용어(`Content` 노드) | 237개 (예시 포함 118개) |
+| 분류(`ContentClass` 노드) | 13개 |
+| 계층 엣지 `UPPER_OF` | 221개 |
+| 관련 엣지 `RELATED_TO` | 374개 |
+| 언급 엣지 `MENTIONS` | 30개 |
+| 분류 엣지 `BELONGS_TO` | 237개 |
+| 계층의 뿌리(하위 개념이 없는 근본 개념) | 44개 |
+
+## 목차
+
+1. [사전 사용법](#사전-사용법)
+2. [설계 이념](#설계-이념)
+3. [노드와 엣지 모델](#노드와-엣지-모델)
+4. [지식 그래프 구조 예시](#지식-그래프-구조-예시)
+5. [분류(Content Class)](#분류content-class)
+6. [계층의 뿌리 — 근본 개념들](#계층의-뿌리--근본-개념들)
+7. [가장 많이 참조되는 용어](#가장-많이-참조되는-용어)
+8. [전체 용어 색인 (가나다·ABC순)](#전체-용어-색인-가나다abc순)
+
+그래프 DB 전환용 데이터(CSV·Cypher·GraphML·JSON)는 [graph/](graph/README.md)에 있습니다.
+
+## 사전 사용법
+
+탐색 경로는 세 가지입니다.
+
+1. **분류에서 시작** — 아래 [분류(Content Class)](#분류content-class) 표에서 관심 영역 문서로 들어가, 문서 상단의 용어 목록에서 항목으로 이동합니다.
+2. **색인에서 시작** — 찾는 용어가 명확하면 [전체 용어 색인](#전체-용어-색인-가나다abc순)에서 바로 이동합니다.
+3. **그래프를 따라 탐색** — 아무 항목에서나 시작해 설명 속 링크, 하위/상위 개념, 관련 용어를 따라 이동합니다. 처음 공부한다면 [계층의 뿌리](#계층의-뿌리--근본-개념들)의 근본 개념부터 상위로 올라가는 것을 권합니다.
+
+각 용어 항목은 다음 요소로 구성됩니다.
+
+| 요소 | 의미 |
+|---|---|
+| **영문 / 분류 / 최초 등장** | 영문 명칭, 소속 분류(ContentClass), 개념이 처음 생긴 연월(`origin`, 알려진 정밀도까지) |
+| **설명 본문** | 정의와 이 코드베이스에서의 의미. 본문 속 파란 링크는 모두 사전의 다른 항목으로 이동합니다 |
+| **예시** | 개념을 구체화한 사례. 예시는 대개 그 개념을 특수화한 것이므로 그래프 관점에서 상위 방향입니다 |
+| **하위 개념(더 일반·근본)** | 이 용어를 규정하는 데 필요한 바탕 개념 — 먼저 알아두면 좋은 것들 |
+| **상위 개념(이를 활용해 만든 개념)** | 이 용어를 활용해 만들어진 더 특수한 개념들 |
+| **관련 용어** | 계층은 아니지만 함께 이해하면 좋은 개념 |
+| **이 용어를 참조하는 항목** | 역링크 — 원래 보던 곳으로 되돌아가는 데 사용합니다 |
 
 ## 설계 이념
 
@@ -19,7 +64,18 @@
 
 > **시행착오 기록** — 초기 버전(v2)에서는 "어텐션이 트랜스포머의 상위"처럼 계층 방향이 뒤집힌 항목들이 있었습니다. "A를 구성 요소로 포함한다"를 상위로 오해한 것이 원인이었고, v3에서 **"B가 A를 활용해 만들어졌으면 B가 상위"** 기준으로 237개 용어의 계층을 전수 재검토해 바로잡았습니다. 같은 이유로 JSON-RPC→MCP, WebSocket→CDP, 네임스페이스·cgroups→컨테이너, 역색인→FTS, TF-IDF→BM25 등도 방향을 수정했습니다.
 
-## 엣지(관계) 종류와 정의
+## 노드와 엣지 모델
+
+### 노드 명(label)과 속성
+
+| Label | 의미 | 개수 |
+|---|---|---|
+| `Content` | 사전을 구성하는 용어/개념 노드 | 237 |
+| `ContentClass` | Content의 분류 정보를 갖는 노드 | 13 |
+
+Content 노드 속성: `id`(고유 식별자), `name_ko`, `name_en`, `category`, `origin`(최초 등장 연월 — 참고 속성), `definition`.
+
+### 엣지(관계) 종류와 정의
 
 노드 간 연결은 아래 4종류의 방향성 엣지로 표현합니다.
 
@@ -32,21 +88,78 @@
 
 용어 간 그래프 데이터(그래프 DB 전환용)는 [graph/](graph/README.md)에 CSV·Cypher·GraphML·JSON 형식으로 저장되어 있습니다.
 
+## 지식 그래프 구조 예시
+
+아래는 사전 일부를 발췌한 구조 예시입니다. 화살표는 `UPPER_OF`(상위 → 하위) 방향이고, 점선은 `BELONGS_TO`입니다.
+
+```mermaid
+graph BT
+    attention["어텐션 (2014)"]
+    transformer["트랜스포머 (2017)"]
+    pretraining["사전학습 (2018)"]
+    llm["LLM (2020)"]
+    ft["파인튜닝 (2018)"]
+    peft["PEFT (2019)"]
+    lora["LoRA (2021)"]
+    toolcalling["도구 호출 (2023)"]
+    agent["에이전트 (2022)"]
+    aiagent["AIAgent 클래스 (2025)"]
+    classllm["ContentClass: LLM 기초"]
+    transformer -->|"UPPER_OF"| attention
+    llm -->|"UPPER_OF"| transformer
+    llm -->|"UPPER_OF"| pretraining
+    ft -->|"UPPER_OF"| pretraining
+    peft -->|"UPPER_OF"| ft
+    lora -->|"UPPER_OF"| peft
+    toolcalling -->|"UPPER_OF"| llm
+    agent -->|"UPPER_OF"| llm
+    agent -->|"UPPER_OF"| toolcalling
+    aiagent -->|"UPPER_OF"| agent
+    llm -.->|"BELONGS_TO"| classllm
+```
+
+위로 올라갈수록(그림의 위쪽) 기존 개념을 활용해 만든 더 특수한 개념이 됩니다. 하나의 노드가 여러 노드와 동시에 연결될 수 있음(예: 에이전트 → LLM, 도구 호출)도 보입니다.
+
 ## 분류(Content Class)
 
-- [LLM 기초](01_llm_basics.md) (27개)
-- [에이전트 코어·대화 루프](02_agent_core.md) (31개)
-- [도구 시스템](03_tool_system.md) (24개)
-- [프롬프트·컨텍스트](04_prompt_context.md) (15개)
-- [메모리·자기개선](05_memory_self_improvement.md) (23개)
-- [상태·영속성·검색](06_state_retrieval.md) (19개)
-- [게이트웨이·인터페이스](07_gateway_interfaces.md) (16개)
-- [프로토콜·상호운용](08_protocols.md) (19개)
-- [실행 환경·인프라](09_execution_infra.md) (22개)
-- [보안](10_security.md) (8개)
-- [설계 원칙·프로젝트 용어](11_design_principles.md) (13개)
-- [크론·플러그인·부가 서브시스템](12_subsystems.md) (10개)
-- [모델 학습·적응](13_model_learning.md) (10개)
+| 분류 | 용어 수 | 대표 용어 |
+|---|---|---|
+| [LLM 기초](01_llm_basics.md) | 27 | [LLM (대규모 언어 모델)](01_llm_basics.md#llm) · [프롬프트 캐싱](01_llm_basics.md#prompt-caching) · [컨텍스트 윈도우](01_llm_basics.md#context-window) |
+| [에이전트 코어·대화 루프](02_agent_core.md) | 31 | [에이전트](02_agent_core.md#agent) · [도구 호출 (함수 호출)](02_agent_core.md#tool-calling) · [도구 호출 루프](02_agent_core.md#tool-calling-loop) |
+| [도구 시스템](03_tool_system.md) | 24 | [도구](03_tool_system.md#tool) · [디스패치](03_tool_system.md#dispatch) · [코어 도구](03_tool_system.md#core-tools) |
+| [프롬프트·컨텍스트](04_prompt_context.md) | 15 | [컨텍스트 압축](04_prompt_context.md#context-compression) · [시스템 프롬프트 3계층](04_prompt_context.md#system-prompt-tiers) · [SOUL.md](04_prompt_context.md#soul-md) |
+| [메모리·자기개선](05_memory_self_improvement.md) | 23 | [스킬](05_memory_self_improvement.md#skill) · [메모리 (에이전트 기억)](05_memory_self_improvement.md#memory) · [메모리 제공자](05_memory_self_improvement.md#memory-provider) |
+| [상태·영속성·검색](06_state_retrieval.md) | 19 | [FTS5](06_state_retrieval.md#fts5) · [SessionDB](06_state_retrieval.md#sessiondb) · [검색 증강 (RAG)](06_state_retrieval.md#retrieval) |
+| [게이트웨이·인터페이스](07_gateway_interfaces.md) | 16 | [게이트웨이](07_gateway_interfaces.md#gateway) · [플랫폼 어댑터](07_gateway_interfaces.md#platform-adapter) · [HermesCLI](07_gateway_interfaces.md#hermes-cli) |
+| [프로토콜·상호운용](08_protocols.md) | 19 | [MCP (모델 컨텍스트 프로토콜)](08_protocols.md#mcp) · [CDP (크롬 개발자도구 프로토콜)](08_protocols.md#cdp) · [MCP 서버](08_protocols.md#mcp-server) |
+| [실행 환경·인프라](09_execution_infra.md) | 22 | [실행 환경](09_execution_infra.md#execution-environment) · [컨테이너](09_execution_infra.md#container) · [샌드박스 (격리)](09_execution_infra.md#sandbox) |
+| [보안](10_security.md) | 8 | [명령 승인](10_security.md#command-approval) · [YOLO 모드](10_security.md#yolo-mode) · [하드라인 차단 목록](10_security.md#hardline-blocklist) |
+| [설계 원칙·프로젝트 용어](11_design_principles.md) | 13 | [풋프린트 사다리](11_design_principles.md#footprint-ladder) · [좁은 허리 원칙](11_design_principles.md#narrow-waist) · [config.yaml](11_design_principles.md#config-yaml) |
+| [크론·플러그인·부가 서브시스템](12_subsystems.md) | 10 | [플러그인](12_subsystems.md#plugin) · [크론 (예약 작업)](12_subsystems.md#cron) · [ACP 어댑터](12_subsystems.md#acp-adapter) |
+| [모델 학습·적응](13_model_learning.md) | 10 | [파인튜닝 (FT)](13_model_learning.md#fine-tuning) · [사전학습](13_model_learning.md#pretraining) · [지시 튜닝](13_model_learning.md#instruction-tuning) |
+
+## 계층의 뿌리 — 근본 개념들
+
+하위 개념이 없는(더 이상 내려갈 곳이 없는) 근본 개념들입니다. 처음 공부한다면 여기서 시작해 상위로 올라가세요.
+
+[CI/CD](09_execution_infra.md#ci-cd) · [E2E 검증](11_design_principles.md#e2e-validation) · [HERMES_HOME](07_gateway_interfaces.md#hermes-home) · [JSON Schema](03_tool_system.md#json-schema) · [JSON-RPC 2.0](08_protocols.md#json-rpc) · [N×M 통합 문제](08_protocols.md#nxm-problem) · [REPL](07_gateway_interfaces.md#repl) · [SQLite](06_state_retrieval.md#sqlite) · [SSE (서버 전송 이벤트)](08_protocols.md#sse) · [TF-IDF](06_state_retrieval.md#tf-idf) · [TUI (Ink)](07_gateway_interfaces.md#tui) · [VM 격리](09_execution_infra.md#vm-isolation) · [WebSocket](08_protocols.md#websocket) · [cgroups](09_execution_infra.md#cgroups) · [config.yaml](11_design_principles.md#config-yaml) · [stdio 전송](08_protocols.md#stdio) · [게이트웨이](07_gateway_interfaces.md#gateway) · [관측성](12_subsystems.md#observability) · [국제화 (i18n)](12_subsystems.md#i18n) · [도구](03_tool_system.md#tool) · [리눅스 네임스페이스](09_execution_infra.md#namespace) · [마음 이론](05_memory_self_improvement.md#theory-of-mind) · [비밀정보 분리 (.env)](10_security.md#secrets-env) · [비신뢰 콘텐츠 원칙](10_security.md#untrusted-content) · [사전학습](13_model_learning.md#pretraining) · [샌드박스 (격리)](09_execution_infra.md#sandbox) · [서버리스 컴퓨트](09_execution_infra.md#serverless) · [실행 환경](09_execution_infra.md#execution-environment) · [앙상블](02_agent_core.md#ensemble) · [어텐션](01_llm_basics.md#attention) · [역색인](06_state_retrieval.md#inverted-index) · [임베딩](01_llm_basics.md#embedding) · [재현성](09_execution_infra.md#reproducibility) · [접근성 트리](08_protocols.md#accessibility-tree) · [좁은 허리 원칙](11_design_principles.md#narrow-waist) · [지연 설치 의존성](09_execution_infra.md#lazy-deps) · [컨벤셔널 커밋](11_design_principles.md#conventional-commits) · [크론 (예약 작업)](12_subsystems.md#cron) · [탈출구 패턴](11_design_principles.md#escape-hatch) · [토큰](01_llm_basics.md#token) · [프런트매터](05_memory_self_improvement.md#frontmatter) · [플러그인](12_subsystems.md#plugin) · [행위 계약 테스트](11_design_principles.md#behavior-contract) · [헤드리스 브라우저](08_protocols.md#headless)
+
+## 가장 많이 참조되는 용어
+
+다른 항목에서 가장 많이 언급되는 허브(hub) 개념들입니다. 이 개념들을 익혀 두면 사전 전체가 쉬워집니다.
+
+| 용어 | 참조 항목 수 |
+|---|---|
+| [LLM (대규모 언어 모델)](01_llm_basics.md#llm) | 23 |
+| [도구](03_tool_system.md#tool) | 13 |
+| [컨텍스트 압축](04_prompt_context.md#context-compression) | 12 |
+| [에이전트](02_agent_core.md#agent) | 11 |
+| [도구 호출 (함수 호출)](02_agent_core.md#tool-calling) | 10 |
+| [MCP (모델 컨텍스트 프로토콜)](08_protocols.md#mcp) | 10 |
+| [실행 환경](09_execution_infra.md#execution-environment) | 10 |
+| [스킬](05_memory_self_improvement.md#skill) | 9 |
+| [프롬프트 캐싱](01_llm_basics.md#prompt-caching) | 8 |
+| [도구 호출 루프](02_agent_core.md#tool-calling-loop) | 8 |
 
 ## 전체 용어 색인 (가나다·ABC순)
 
