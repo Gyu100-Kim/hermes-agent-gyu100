@@ -11,7 +11,7 @@ CALL {
   FOREACH (_ IN CASE WHEN row.`:LABEL` = 'Content' THEN [1] ELSE [] END |
     MERGE (t:Content {id: row.`id:ID`})
     SET t.name_ko = row.name_ko, t.name_en = row.name_en,
-        t.category = row.category, t.definition = row.definition)
+        t.category = row.category, t.origin = row.origin, t.definition = row.definition)
   FOREACH (_ IN CASE WHEN row.`:LABEL` = 'ContentClass' THEN [1] ELSE [] END |
     MERGE (c:ContentClass {id: row.`id:ID`})
     SET c.name_ko = row.name_ko, c.name_en = row.name_en, c.definition = row.definition)
