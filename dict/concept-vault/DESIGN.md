@@ -23,7 +23,20 @@
 11. [기능 6 — ConceptClass 관리](#11-기능-6--conceptclass-관리)
 12. [API 설계 요약](#12-api-설계-요약)
 13. [데이터 무결성·검증 규칙](#13-데이터-무결성검증-규칙)
-14. [구현 로드맵](#14-구현-로드맵)
+14. [비기능 요구사항](#14-비기능-요구사항)
+15. [구현 로드맵](#15-구현-로드맵)
+16. [부록 — 예시 Cypher 쿼리](#16-부록--예시-cypher-쿼리)
+
+### 용어 정리
+
+| 용어 | 의미 |
+|---|---|
+| **Concept** | 사용자가 학습·저장한 개념 노드 (첨부 자료의 Content) |
+| **ConceptClass** | 사람이 정의하는 개념의 역할 분류 (예: Concept·Technology·Principle) |
+| **Community** | 클러스터링(기능 3)이 그래프 구조에서 자동으로 발견한 군집 |
+| **상위 개념** | 어떤 개념을 기반으로 활용해 만들어진 더 특수한 파생 개념 |
+| **하위 개념** | 어떤 개념을 규정하기 위해 필요한 더 일반·근본적인 기반 개념 |
+| **draft / approved / merged** | 개념의 상태 — 검토 전 초안 / 사용자 승인 완료 / 다른 개념의 별칭으로 통합됨 |
 
 ---
 
@@ -146,7 +159,7 @@
 
 | Label | 의미 | 주요 속성 |
 |---|---|---|
-| `Concept` | 사용자가 학습·저장한 개념 (자료의 Content) | `id`(슬러그, 전역 고유), `name_ko`, `name_en`, `aliases[]`, `definition`(사용자 언어 정의), `example`, `origin`(최초 등장 시기 — 참고 속성, 자유 정밀도 문자열), `embedding`(벡터), `status`(`draft`/`approved`), `created_at`, `updated_at`, `revision_no` |
+| `Concept` | 사용자가 학습·저장한 개념 (자료의 Content) | `id`(슬러그, 전역 고유), `name_ko`, `name_en`, `aliases[]`(동의어·다른 표기 목록), `definition`(사용자 언어 정의), `example`, `origin`(최초 등장 시기 — 참고 속성, 자유 정밀도 문자열), `embedding`(벡터), `status`(`draft`/`approved`/`merged` — [4.3](#43-별칭용어-통일-모델) 참조), `created_at`, `updated_at`, `revision_no` |
 | `ConceptClass` | 개념의 역할 분류 (자료의 ContentClass) | `id`, `name`, `description`. **소수 유지** — 초기값은 dict1의 9종(Concept·Component·Technology·Mechanism·Principle·Protocol·Artifact·Research·Threat)을 도메인 중립적으로 일반화한 것에서 시작. 종류의 추가·이름 변경·제거는 기능 6(클래스 관리)으로 사용자가 수행 |
 | `Community` | 기능 3(클러스터링)이 그래프 구조에서 발견해 생성하는 군집 노드 — ConceptClass(사람이 정의한 역할 분류)와 구분되는 **구조 기반** 분류 축 | `id`, `name`(LLM 명명), `description`(LLM 생성), `algorithm`(louvain/leiden), `run_id`(클러스터링 실행 식별자), `created_at`, `size` |
 | `ConceptRevision` | 개념의 과거 버전 스냅숏 | `revision_no`, `definition`, `example`, `saved_at`, `reason`(upgrade/merge/rename) |
@@ -162,11 +175,28 @@ ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `co
 | `RELATED_TO` | Concept → Concept (정렬된 한 방향만 저장) | 계층은 아니지만 밀접히 관련. 같은 쌍이 UPPER_OF와 중복되면 UPPER_OF 우선 |
 | `MENTIONS` | Concept → Concept | 정의 본문에서 언급될 뿐 계층·관련으로 분류하지 않은 참조 |
 | `BELONGS_TO` | Concept → ConceptClass | 역할 분류 소속(계층 아님). 모든 approved Concept는 최소 1개 필수 |
-| `ALIAS_OF` | Concept(별칭·중복 등록분) → Concept(정본) | **[개선]** 용어 통일 시 흡수된 명칭의 흔적. 별칭 노드는 검색 인덱스에는 남기되 그래프 탐색·클러스터링에서는 정본으로 해소 |
+| `ALIAS_OF` | Concept(`merged` 상태의 중복 등록분) → Concept(정본) | **[개선]** 사후 용어 통일 시 흡수된 노드의 흔적 — [4.3](#43-별칭용어-통일-모델) 참조 |
 | `IN_COMMUNITY` | Concept → Community | **[개선]** 기능 3의 결과. 클러스터링 실행(run)마다 재생성 |
 | `HAS_REVISION` | Concept → ConceptRevision | **[개선]** 업그레이드 이력 |
 
-### 4.3 계층 판정 절차 (자료의 v3 사상 그대로 — 시스템 규칙화)
+### 4.3 별칭(용어 통일) 모델
+
+"같은 개념을 다른 이름으로 저장"하는 문제는 발견 시점에 따라 두 가지 방식으로 처리한다
+(두 메커니즘을 섮어 쓰지 않도록 명확히 구분):
+
+1. **등록 시점에 별칭임이 확인된 경우 (사전 차단)** — 새 노드를 만들지 않고 정본 Concept의
+   `aliases[]` 속성에 새 표기를 추가한다. 작성했던 정의 내용은 필요 시 기능 5(업그레이드)로
+   전환해 정본에 병합한다.
+2. **이미 approved로 존재하던 중복 노드를 사후 발견한 경우 (사후 통일)** — 사용자가 정본을
+   지정하면 흡수되는 노드를 `status='merged'`로 전환하고 `ALIAS_OF` 엣지로 정본을 가리킨다.
+   흡수 노드의 이름은 정본 `aliases[]`에 추가하고, 정의는 기능 5 파이프라인으로 정본에
+   병합 제안한다. 흡수 노드에 달려 있던 계층·관련 엣지는 정본으로 이관 제안(사용자 검토)한다.
+
+`merged` 노드의 취급: 그래프 탐색·클러스터링·시각화·통계에서 제외하고, 검색에서는 이름
+일치 시 정본으로 리다이렉트한다("X는 Y의 별칭입니다" 표시). 비파괴 원칙에 따라 삭제하지
+않고 보존한다.
+
+### 4.4 계층 판정 절차 (자료의 v3 사상 그대로 — 시스템 규칙화)
 
 두 개념 A, B의 관계는 반드시 다음 순서로 판정한다(LLM 프롬프트와 검토 UI 가이드에 동일하게
 내장):
@@ -185,13 +215,16 @@ ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `co
   상위가 되지 않는다(v2 오류 유형).
 - 저장 시 `UPPER_OF` 순환 검사를 통과해야 한다(순환 = 방향 오판의 신호).
 
-### 4.4 인덱스
+### 4.5 인덱스
 
 | 인덱스 | 대상 | 용도 |
 |---|---|---|
 | 유니크 제약 | `Concept.id`, `ConceptClass.id`, `Community.id` | 전역 고유성 |
 | Full-text (Lucene) | `Concept.name_ko`, `name_en`, `aliases`, `definition` | 기능 2 키워드 검색, 기능 1 중복 탐지 1차 |
 | Vector | `Concept.embedding` | 기능 2 서술형 검색, 기능 1 중복 탐지 2차 |
+
+임베딩은 `name_ko + name_en + definition + example`을 결합한 텍스트로 생성하며, 정의가
+변경되는 모든 시점(신규 저장·업그레이드·별칭 추가)에 재계산한다.
 
 ---
 
@@ -244,6 +277,15 @@ graph LR
 객체로만 존재하며, 승인 시점에만 본 그래프(`approved`)에 반영된다. 검색·클러스터링·시각화는
 `approved`만 대상으로 한다.
 
+**비동기·예외 처리**:
+
+- 관계 분석(`analyze`)과 클러스터링은 LLM 호출을 포함해 수 초~수십 초가 걸릴 수 있으므로
+  **비동기 작업**으로 처리한다 — 요청 시 `202 Accepted` + 작업 id를 반환하고, 프론트는 진행
+  상태를 폴링한다.
+- LLM/임베딩 API 장애 시 자동 제안 없이 **수동 모드**로 진행할 수 있다(사용자가 직접 클래스·
+  관계를 지정해 저장). 임베딩 생성 실패 노드는 큐에 남겨 복구 후 재계산한다.
+- LLM 제안은 어디까지나 제안이다 — 파이프라인 오류가 있어도 사용자 검토 단계가 최종 방어선이다.
+
 ---
 
 ## 6. 기능 1 — 신규 개념 입력
@@ -273,14 +315,32 @@ graph TD
    - 1차: full-text 인덱스로 이름·별칭 정확/유사 일치 검색.
    - 2차: 신규 정의 임베딩 → 벡터 인덱스 top-k 유사 개념 조회(코사인 유사도 임계값).
    - 후보가 있으면 LLM에 "같은 개념의 다른 표기인가 / 별개 개념인가"를 판정시켜
-     **① 기존 개념의 별칭으로 흡수(ALIAS_OF) ② 기존 개념의 업그레이드로 전환(기능 5로 라우팅)
+     **① 기존 개념의 별칭으로 흡수(새 노드를 만들지 않고 정본 `aliases[]`에 추가 —
+     [4.3](#43-별칭용어-통일-모델) 방식 1) ② 기존 개념의 업그레이드로 전환(기능 5로 라우팅)
      ③ 별개 신규 개념** 중 하나를 제안. 기존 그래프에 같은 개념이 다른 표기로 여러 건
-     존재하는 것이 발견되면 통일(정본 지정 + 별칭화) 제안도 함께 생성.
+     존재하는 것이 발견되면 사후 통일(정본 지정 + `merged`·`ALIAS_OF` 별칭화 — 방식 2)
+     제안도 함께 생성.
 2. **클래스 분류**: 정의를 근거로 ConceptClass 1개 이상을 제안(근거 문장 포함).
 3. **계층·관계 규정**: 벡터·전문 검색으로 좁힌 이웃 후보군(top-N)과 신규 개념 사이의 관계를
-   [4.3 판정 절차](#43-계층-판정-절차-자료의-v3-사상-그대로--시스템-규칙화)를 내장한 프롬프트로
+   [4.4 판정 절차](#44-계층-판정-절차-자료의-v3-사상-그대로--시스템-규칙화)를 내장한 프롬프트로
    분석 → `UPPER_OF`(방향 포함)/`RELATED_TO`/`MENTIONS` 제안 목록 생성. 각 제안에는
    **판정 근거**(어느 규칙에 의해, 왜)와 origin 참고 정보를 첨부.
+
+   분석 결과는 구조화 출력(JSON)으로 받는다. 제안 객체 예시:
+
+   ```json
+   {
+     "duplicates": [{"target_id": "concept:attention", "verdict": "distinct", "reason": "..."}],
+     "classes": [{"class_id": "class:concept", "reason": "구현 독립적인 일반 개념이므로"}],
+     "relations": [
+       {"type": "UPPER_OF", "from": "new", "to": "concept:attention",
+        "rule": 1, "reason": "신규 개념은 Attention을 활용해 만들어짐",
+        "origin_hint": "Attention 2014-09 < 신규 2017-06 (참고)"}
+     ],
+     "mentions": ["concept:embedding"],
+     "unregistered_terms": ["Positional Encoding"]
+   }
+   ```
 4. **정의 보강 제안(선택)**: 정의 본문 속 전문 용어 중 그래프에 이미 존재하는 개념을
    링크(MENTIONS) 후보로 표시. 그래프에 없는 용어는 "추후 등록 후보"로만 목록화(자동 등록
    하지 않음 — 재귀 확장은 사용자 주도).
@@ -314,6 +374,9 @@ graph TD
 |---|---|---|
 | 어휘 검색 | full-text 인덱스 (이름·별칭·정의) | 정확 명칭, 부분 일치, 별칭(ALIAS_OF 해소 포함) |
 | 의미 검색 | 질의 임베딩 → 벡터 인덱스 top-k | 서술형 설명, 명칭을 모르는 개념 |
+
+검색 대상은 `approved` 개념이며, `merged` 노드는 이름 일치 시 정본으로 리다이렉트한다
+("X는 Y의 별칭입니다" 표시 — [4.3](#43-별칭용어-통일-모델)).
 
 - **융합**: RRF(Reciprocal Rank Fusion)로 두 랭킹 결합.
 - **그래프 확장**: 상위 결과 각각에 1-hop 이웃(기반 개념·파생 개념·관련 개념)을 함께 제공해
@@ -451,10 +514,14 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 | 4 | `GET /communities/{id}/graph` | 커뮤니티 내부 서브그래프(노드·엣지 JSON) |
 | 4 | `GET /concepts/{id}` · `GET /concepts/{id}/chain` | 개념 상세 / UPPER_OF 기반 사슬 |
 | 5 | `POST /concepts/{id}/upgrade` | 추가 정보 제출 → 병합·재분석 초안 반환 (이후 commit 재사용) |
+| 5 | `GET /concepts/{id}/revisions` | 리비전 이력 조회·비교 |
 | 6 | `GET /classes` · `POST /classes` | 클래스 목록(소속 개념 수 포함) / 신규 클래스 추가 |
 | 6 | `PATCH /classes/{id}` | 클래스 이름·설명 변경 |
 | 6 | `DELETE /classes/{id}?migrate_to=...` | 소속 개념 이관 후 클래스 제거 (이관 대상 필수) |
 | 공통 | `GET /export` | graph/ 형식(CSV·Cypher·GraphML·JSON) 백업 내보내기 — 자료의 산출물 형식 계승 |
+| 공통 | `GET /stats` | 개념 수·엣지 수·클래스 분포 등 통계 (항상 그래프에서 실시간 산출) |
+
+`analyze`·`clustering/runs`는 비동기 작업(202 + 작업 id 반환, 진행 상태 폴링 — [5장](#5-시스템-아키텍처)).
 
 ---
 
@@ -462,15 +529,16 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 
 자료의 "검증 체크리스트"를 저장 트랜잭션마다 시스템이 자동 수행하는 불변 조건으로 승격:
 
-1. 모든 `approved` Concept는 `BELONGS_TO` ≥ 1.
+1. 모든 `approved` Concept는 `BELONGS_TO` ≥ 1 (`draft`/`merged`는 면제).
 2. `UPPER_OF`는 Concept → Concept, `BELONGS_TO`는 Concept → ConceptClass만 허용.
 3. **`UPPER_OF` 순환 0** — 저장하려는 엣지가 순환을 만들면 거부하고 방향 재검토 요구.
 4. 같은 노드 쌍이 `UPPER_OF`와 `RELATED_TO`에 중복 금지(계층 우선).
 5. `RELATED_TO`는 id 정렬 후 한 방향만 저장(중복 방지).
 6. 노드 id 전역 고유(`concept:`/`class:`/`community:` 네임스페이스).
 7. dangling 엣지 0 (참조 무결성).
-8. `ALIAS_OF`의 도착 노드는 정본(`approved`, 자신이 다른 노드의 별칭이 아님)이어야 함
-   (별칭 사슬 금지).
+8. `ALIAS_OF`의 출발 노드는 `merged`, 도착 노드는 정본(`approved`, 자신이 다른 노드의
+   별칭이 아님)이어야 함 (별칭 사슬 금지). `merged` 노드는 `ALIAS_OF` 외의 엣지를 가질 수
+   없음(계층·관련은 통일 시 정본으로 이관).
 9. 통계(개념 수·엣지 수·클래스 분포)는 항상 그래프에서 실시간 산출 — 하드코딩 금지.
 10. 대표 사슬 회귀 검사(시드 데이터 기준): `Transformer -[:UPPER_OF]-> Attention`은
     존재하고 역방향은 존재하지 않아야 함.
@@ -478,7 +546,20 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 
 ---
 
-## 14. 구현 로드맵
+## 14. 비기능 요구사항
+
+| 항목 | 내용 |
+|---|---|
+| 사용자 범위 | 1차 목표는 **개인 단일 사용자**. 멀티테넌시는 범위 외(확장 시 사용자별 DB 분리를 우선 검토) |
+| 규모 목표 | 개념 수만 노드·엣지까지 단일 Neo4j CE 인스턴스로 처리 |
+| 응답 목표 | 검색·그래프 조회 < 1초. LLM 분석·클러스터링은 비동기(수초~수십초 허용, 진행률 표시) |
+| 백업 | Neo4j 볼륨 스냅샷 + 주기적 `/export`(CSV·Cypher·GraphML·JSON) — 자료의 graph/ 형식이라 다른 그래프 DB로의 이식도 보장 |
+| 비용 | LLM 호출은 입력·업그레이드·클러스터링 시점에만 발생(검색은 임베딩 1회만). 관계 분석은 이웃 후보 top-N으로 컨텍스트를 제한 |
+| 비밀정보 | LLM·임베딩 API 키는 환경변수/비밀 저장소로만 주입, 코드·설정파일에 미포함 |
+
+---
+
+## 15. 구현 로드맵
 
 | 단계 | 범위 | 산출물 |
 |---|---|---|
@@ -490,3 +571,38 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 
 각 Phase 종료 시 [13장](#13-데이터-무결성검증-규칙) 전 항목을 통과하는 자동 테스트를
 포함한다.
+
+---
+
+## 16. 부록 — 예시 Cypher 쿼리
+
+자료의 예시 쿼리 스타일을 계승해, 주요 기능이 실제로 어떤 쿼리로 구현되는지 보입니다.
+
+```cypher
+// [기능 4] 기반 사슬: LoRA에서 더 일반적인 개념 방향으로 내려가기
+MATCH p = (c:Concept {id: 'concept:lora'})-[:UPPER_OF*]->(base:Concept)
+WHERE NOT (base)-[:UPPER_OF]->()
+RETURN [n IN nodes(p) | n.name_ko];
+
+// [기능 4] 어떤 개념의 상위(이를 활용해 만든) 개념들
+MATCH (upper:Concept)-[:UPPER_OF]->(c:Concept {id: 'concept:transformer'})
+RETURN upper.name_ko;
+
+// [규칙 3] 새 엣지 (a)-[:UPPER_OF]->(b) 추가 전 순환 검사 — b에서 a로 가는 경로가 이미 있으면 순환
+MATCH (b:Concept {id: $to})
+RETURN exists((b)-[:UPPER_OF*]->(:Concept {id: $from})) AS would_cycle;
+
+// [기능 4] 활성 run의 커뮤니티 내부 서브그래프
+MATCH (c:Concept)-[:IN_COMMUNITY]->(k:Community {id: $community, active: true})
+OPTIONAL MATCH (c)-[e:UPPER_OF|RELATED_TO]-(c2:Concept)-[:IN_COMMUNITY]->(k)
+RETURN c, e, c2;
+
+// [기능 2] 명칭 일치 시 merged 노드를 정본으로 해소
+MATCH (m:Concept {status: 'merged'})-[:ALIAS_OF]->(canon:Concept)
+WHERE m.name_ko = $q OR m.name_en = $q
+RETURN canon;
+
+// [통계] 클래스별 개념 수 (하드코딩 금지 — 항상 실시간 산출)
+MATCH (c:Concept {status: 'approved'})-[:BELONGS_TO]->(k:ConceptClass)
+RETURN k.name, count(c) ORDER BY count(c) DESC;
+```
