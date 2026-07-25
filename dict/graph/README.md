@@ -1,66 +1,73 @@
-# 용어 그래프 데이터 (dict/graph/)
+# dict/graph/ — 용어 그래프 데이터 (그래프 DB 전환용)
 
-[사전 본문](../README.md)에 있는 모든 용어와 용어 간 관계를, 그래프 데이터베이스로 바로 들여올 수 있는 형식으로 저장한 디렉토리입니다.
+[⬆ 사전 목차로](../README.md)
 
-## 그래프 모델
+`dict/` 용어 사전의 모든 노드와 관계를 그래프 DB로 옮기기 좋은 형식으로 저장한 디렉토리입니다.
 
-- **노드**: `Term` 레이블 하나. 속성은 `id`(영문 슬러그), `name_ko`, `name_en`, `category`(12개 범주), `definition`(링크 제거한 순수 텍스트 정의).
-- **엣지(방향 있음)**:
-  - `SUBCONCEPT_OF` — 하위 개념 → 상위 개념 (계층 관계. 예: `bm25 -SUBCONCEPT_OF-> fts5`)
-  - `RELATED_TO` — 계층은 아니지만 함께 이해해야 하는 관련 개념
-  - `MENTIONS` — 정의 본문에서 언급(링크)하지만 상위/관련으로 분류하지 않은 참조
+## 그래프 모델 (v2)
 
-## 파일
+### 노드 명(label)
 
-| 파일 | 형식 | 용도 |
+노드 명은 **노드의 역할**을 규정합니다.
+
+| Label | 의미 | 개수 |
 |---|---|---|
-| `nodes.csv` / `edges.csv` | Neo4j 헤더 규약 CSV (`id:ID`, `:START_ID`, `:END_ID`, `:TYPE`, `:LABEL`) | Neo4j `LOAD CSV`/`neo4j-admin import`, 기타 대부분의 도구 |
-| `import_neo4j.cypher` | Cypher 스크립트 | Neo4j(및 Cypher 호환 DB인 Memgraph)에서 위 CSV를 읽어 그래프 생성 |
-| `graph.graphml` | GraphML (TinkerPop 호환) | **JanusGraph** 등 Apache TinkerPop/Gremlin 계열 DB |
-| `graph.json` | 일반 JSON (`nodes`/`edges` 배열) | 커스텀 스크립트·시각화 도구용 범용 형식 |
+| `Content` | 용어 사전을 구성하는 용어/개념 노드 | 237 |
+| `ContentClass` | Content의 분류 정보를 갖는 노드. 모든 `Content`는 최소 1개의 `ContentClass`에 `BELONGS_TO` 엣지로 연결됩니다 | 13 |
 
-## 대표 오픈소스 그래프 DB 선정: JanusGraph
+노드 속성: `id`(고유 식별자), `name_ko`, `name_en`, `category`, `definition`(예시 포함 평문).
 
-Neo4j 외의 대표 오픈소스 그래프 DB로는 **[JanusGraph](https://janusgraph.org/)** 를 선정했습니다.
+### 엣지(관계)
 
-- **완전한 오픈소스**: Apache 2.0 라이선스, Linux Foundation 산하 프로젝트 (Neo4j Community는 GPLv3이고 핵심 기능 일부가 상용판 전용).
-- **표준 기반**: Apache TinkerPop / Gremlin 표준 위에 구축되어, 같은 GraphML 파일을 TinkerPop 호환 DB 어디서든 재사용 가능.
-- **확장성**: Cassandra/HBase 백엔드로 대규모 그래프까지 확장.
+| 타입 | 방향 | 의미 |
+|---|---|---|
+| `UPPER_OF` | (더 특수한 개념) → (더 일반적인 개념) | **계층 엣지.** source는 target의 **상위 개념**입니다. 이 사전의 계층 방향은 "하위로 갈수록 더 일반적, 상위로 갈수록 더 특수"입니다. 예: `(LoRA)-[:UPPER_OF]->(PEFT)`, `(PEFT)-[:UPPER_OF]->(파인튜닝)`, `(시스템 프롬프트)-[:UPPER_OF]->(프롬프트)` |
+| `RELATED_TO` | 방향성 있음(정의한 쪽 → 대상) | 계층은 아니지만 함께 이해하면 좋은 관련 개념 |
+| `MENTIONS` | 정의한 쪽 → 언급된 용어 | 정의/예시 본문에서 링크로 언급되지만 상위·하위/관련로 분류하지 않은 참조 |
+| `BELONGS_TO` | `Content` → `ContentClass` | 해당 분류(class)에 속한다는 의미. 계층(상위/하위) 엣지가 아닙니다 |
 
-### JanusGraph(Gremlin Console)로 가져오기
+하나의 용어는 여러 용어와 동시에 연결될 수 있으며(다중 연결), 연결이 없는 독립 개념도 존재할 수 있습니다.
 
-```groovy
-graph = JanusGraphFactory.open('inmemory')      // 또는 실제 스토리지 설정
-graph.io(IoCore.graphml()).readGraph('dict/graph/graph.graphml')
-g = graph.traversal()
-// 예: "컨텍스트 압축"의 상위 개념 사슬
-g.V().has('name_en', 'Context Compression').repeat(out('SUBCONCEPT_OF')).emit().values('name_ko')
-```
+## 파일 구성
 
-### Neo4j로 가져오기
+| 파일 | 용도 |
+|---|---|
+| `nodes.csv` / `edges.csv` | **Neo4j** `LOAD CSV` 및 `neo4j-admin import` 호환 CSV (`id:ID`, `:LABEL`, `:START_ID`, `:END_ID`, `:TYPE` 헤더) |
+| `import_neo4j.cypher` | Neo4j 적재 스크립트 (제약 조건 + 노드/엣지 MERGE) |
+| `graph.graphml` | **JanusGraph** 등 Apache TinkerPop 계열 그래프 DB용 GraphML |
+| `graph.json` | 범용 JSON (시각화 도구·커스텀 스크립트용) |
 
-1. `nodes.csv`, `edges.csv`를 Neo4j의 `import/` 디렉토리에 복사
-2. `import_neo4j.cypher` 실행 (Browser 또는 `cypher-shell -f import_neo4j.cypher`)
+## Neo4j 적재
 
-또는 초기 적재라면 한 번에:
+1. `nodes.csv`, `edges.csv`를 Neo4j DBMS의 `import/` 디렉토리에 복사
+2. `import_neo4j.cypher` 실행
 
-```bash
-neo4j-admin database import full neo4j --nodes=nodes.csv --relationships=edges.csv
-```
-
-### 활용 예시 쿼리 (Cypher)
+예시 쿼리:
 
 ```cypher
-// 특정 용어를 이해하기 위해 알아야 하는 모든 하위 개념 (역방향 계층 탐색)
-MATCH (t:Term {name_en: 'Context Compression'})<-[:SUBCONCEPT_OF*]-(sub)
-RETURN sub.name_ko;
+// LoRA에서 하위(더 일반) 방향으로 계층을 따라 내려가기: LoRA → PEFT → 파인튜닝 → 사전학습 ...
+MATCH p = (t:Content {id: 'lora'})-[:UPPER_OF*]->(base)
+RETURN p;
 
-// 두 용어 사이의 최단 연결 경로
-MATCH p = shortestPath(
-  (a:Term {id: 'skill'})-[*..6]-(b:Term {id: 'prompt-caching'}))
-RETURN [n IN nodes(p) | n.name_ko];
+// 어떤 개념의 상위(더 특수) 개념들 = 그 개념을 구체화한 것들
+MATCH (spec)-[:UPPER_OF]->(t:Content {id: 'peft'})
+RETURN spec.name_ko;
 
-// 연결이 가장 많은 허브 개념 Top 10
-MATCH (t:Term)-[r]-()
-RETURN t.name_ko, count(r) AS degree ORDER BY degree DESC LIMIT 10;
+// 분류별 용어 목록
+MATCH (t:Content)-[:BELONGS_TO]->(c:ContentClass {id: 'class-learning'})
+RETURN t.name_ko;
 ```
+
+## JanusGraph (오픈소스 그래프 DB) 적재
+
+Neo4j 외 대표 오픈소스 그래프 DB로는 **JanusGraph**(Apache 2.0, TinkerPop/Gremlin 표준, Cassandra·HBase 등으로 수평 확장)를 선정했습니다. GraphML은 TinkerPop 표준 입출력 형식이므로 그대로 사용할 수 있습니다.
+
+```groovy
+graph = JanusGraphFactory.open('inmemory')
+graph.io(IoCore.graphml()).readGraph('graph.graphml')
+g = graph.traversal()
+// LoRA에서 더 일반적인 개념 방향으로 탐색
+g.V().has('name_en', 'Low-Rank Adaptation').out('UPPER_OF').values('name_ko')
+```
+
+GraphML의 `labelV` 속성이 노드 명(`Content`/`ContentClass`), `labelE`가 엣지 타입입니다. 같은 파일을 TinkerGraph, Amazon Neptune(변환 후) 등 다른 TinkerPop 호환 시스템에도 쓸 수 있습니다.
