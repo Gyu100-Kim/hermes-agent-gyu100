@@ -3,8 +3,8 @@
 ## 이 문서에서 다루는 큰 맥락
 
 이 문서는 Hermes의 **심장**을 다룹니다. 사용자가 메시지 하나를 보내면, 에이전트는
-LLM에게 물어보고 → LLM이 요청한 도구를 실행하고 → 그 결과를 다시 LLM에게 주고 →
-다시 물어보는 과정을 **반복**합니다. 이 반복을 **도구 호출 루프(tool-calling
+LLM ([용어사전](../dict/01_llm_basics.md#llm))에게 물어보고 → LLM이 요청한 도구를 실행하고 → 그 결과를 다시 LLM에게 주고 →
+다시 물어보는 과정을 **반복**합니다. 이 반복을 **도구 호출 루프 ([용어사전](../dict/02_agent_core.md#tool-calling-loop))(tool-calling
 loop)** 라고 부르며, 코드에서는 `run_conversation`이라는 하나의 큰 함수(약 3,900줄)가
 담당합니다. (배경 이론은 [tech_background/01_tool_calling.md](tech_background/01_tool_calling.md))
 
@@ -56,7 +56,7 @@ class AIAgent:
   자식들과 예산을 나눠 씁니다 ([05](05_tools.md)의 delegation 참고).
 - `enabled_toolsets`/`disabled_toolsets` — 어떤 도구 묶음을 켤지.
 - `session_id` — 이 에이전트가 붙은 세션(→ [06](06_state.md)).
-- 각종 `*_callback` — 진행 상황을 프론트엔드(CLI/TUI/게이트웨이)로 흘려보내는 콜백.
+- 각종 `*_callback` — 진행 상황을 프론트엔드(CLI/TUI ([용어사전](../dict/07_gateway_interfaces.md#tui))/게이트웨이 ([용어사전](../dict/07_gateway_interfaces.md#gateway)))로 흘려보내는 콜백.
   같은 코어가 여러 얼굴을 갖는 비결입니다: 표시는 콜백으로 위임.
 
 > **개념: provider / api_mode** — Hermes는 특정 LLM 회사에 묶이지 않습니다.
@@ -93,8 +93,8 @@ def run_conversation(
   쓰며 상태를 공유합니다(파일 상단 docstring 8-9행 설명). 즉 이 함수는 사실상
   `AIAgent`의 메서드지만, 파일 크기 때문에 밖으로 뺀 것입니다.
 - `user_message` — 이번 턴의 사용자 입력.
-- `conversation_history` — 이전 대화(재개 시 SQLite에서 복원됨).
-- `moa_config` — Mixture-of-Agents 설정(→ [tech_background/04_moa.md](tech_background/04_moa.md)).
+- `conversation_history` — 이전 대화(재개 시 SQLite ([용어사전](../dict/06_state_retrieval.md#sqlite))에서 복원됨).
+- `moa_config` — Mixture-of-Agents ([용어사전](../dict/02_agent_core.md#moa)) 설정(→ [tech_background/04_moa.md](tech_background/04_moa.md)).
 
 함수 앞부분(881-899행)에서:
 - MoA 턴이면 `decode_moa_turn`으로 설정을 분리(881-892행).
@@ -112,9 +112,9 @@ def run_conversation(
 - stdio 가드, 재시도 카운터 리셋
 - 사용자 메시지 살균(sanitization)
 - todo/넛지(nudge) 하이드레이션
-- **시스템 프롬프트 복원 또는 빌드** ← 프롬프트 캐시의 핵심(→ [07](07_prompt_context.md))
+- **시스템 프롬프트 ([용어사전](../dict/01_llm_basics.md#system-prompt)) 복원 또는 빌드** ← 프롬프트 캐시의 핵심(→ [07](07_prompt_context.md))
 - **사전 압축(preflight compression)**
-- `pre_llm_call` 플러그인 훅
+- `pre_llm_call` 플러그인 훅 ([용어사전](../dict/12_subsystems.md#plugin-hook))
 - 외부 메모리 프리페치
 - 크래시 대비 영속화
 
@@ -135,7 +135,7 @@ while (api_call_count < agent.max_iterations and agent.iteration_budget.remainin
 한 조각씩 풀어보면:
 - `api_call_count < agent.max_iterations` — 지금까지 모델을 부른 횟수가 상한(기본
   90)보다 작아야 계속 돎. 무한 루프 방지.
-- `agent.iteration_budget.remaining > 0` — **반복 예산(iteration budget)** 이
+- `agent.iteration_budget.remaining > 0` — **반복 예산 ([용어사전](../dict/02_agent_core.md#iteration-budget))(iteration budget)** 이
   남아 있어야 함. 이는 단순 카운터가 아니라, 부모/자식(위임) 에이전트가 **공유**하는
   예산입니다(`agent/iteration_budget.py`의 `IterationBudget`). 자식이 많이 쓰면
   부모가 쓸 몫이 줄어듭니다.
@@ -169,7 +169,7 @@ while (api_call_count < agent.max_iterations and agent.iteration_budget.remainin
 6. **step 콜백 발화** (1047행~): 게이트웨이 훅(`agent:step` 이벤트)에 진행을 알림.
 
 그 뒤(문서로 다 옮기기엔 매우 긴 부분)에서 실제 **모델 API 호출**이 일어나고,
-응답에 도구 호출(tool call)이 있으면 `handle_function_call`을 통해 도구가 실행되며,
+응답에 도구 호출 ([용어사전](../dict/02_agent_core.md#tool-calling))(tool call)이 있으면 `handle_function_call`을 통해 도구가 실행되며,
 그 결과가 `messages`에 추가되어 다음 반복의 입력이 됩니다. 도구 디스패치의 실제
 메커니즘은 [05_tools.md](05_tools.md)에서 다룹니다.
 
@@ -184,7 +184,7 @@ while (api_call_count < agent.max_iterations and agent.iteration_budget.remainin
   오류 분류는 `agent/error_classifier.py`의 `classify_api_error`가 담당(43행 import).
 - **폴백(fallback)**: 주 모델이 계속 실패하면 미리 설정한 다른 provider로 넘어감
   (CLI `hermes fallback`으로 설정, → [03](03_entrypoints.md)).
-- **컨텍스트 압축(compression)**: 대화가 길어져 토큰 한도에 근접하면 중간 내용을
+- **컨텍스트 압축 ([용어사전](../dict/04_prompt_context.md#context-compression))(compression)**: 대화가 길어져 토큰 한도에 근접하면 중간 내용을
   요약으로 갈아끼움. import된 `PRE_API_COMPRESSION_STATUS_TEMPLATE` 등(31-39행)이
   이 과정의 상태 메시지 템플릿입니다. 상세는 [07](07_prompt_context.md)과
   [tech_background/03_context_compression.md](tech_background/03_context_compression.md).
@@ -203,7 +203,7 @@ while (api_call_count < agent.max_iterations and agent.iteration_budget.remainin
 이들을 쪼개려면 수십 개의 지역 변수(대화 상태)를 여기저기로 넘겨야 해서 오히려
 버그가 늘 수 있습니다. 그래서 순수 준비 로직(`build_turn_context`)이나 명확히
 분리 가능한 헬퍼(메시지 살균, 오류 분류)는 밖으로 빼되, **핵심 상태 기계는 한
-곳에** 두는 절충을 택했습니다. `AGENTS.md`가 강조하는 "역할 교대 불변식,
+곳에** 두는 절충을 택했습니다. `AGENTS.md`가 강조하는 "역할 교대 불변식 ([용어사전](../dict/02_agent_core.md#role-alternation)),
 프롬프트 캐시 안정성"을 지키려면 이 상태들을 한 눈에 볼 수 있어야 하기 때문입니다.
 
 다음 문서에서는 이 루프가 실제로 "도구를 실행"하는 계층으로 내려갑니다.

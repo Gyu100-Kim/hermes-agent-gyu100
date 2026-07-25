@@ -2,14 +2,14 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-LLM은 **컨텍스트(context)** — 즉 매번 함께 보내는 텍스트 — 안에 담긴 내용만 압니다.
+LLM ([용어사전](../dict/01_llm_basics.md#llm))은 **컨텍스트(context)** — 즉 매번 함께 보내는 텍스트 — 안에 담긴 내용만 압니다.
 그래서 "무엇을, 어떤 순서로, 얼마나 안정적으로" 컨텍스트에 넣느냐가 에이전트의
 품질과 비용을 좌우합니다. 이 문서는 Hermes의 컨텍스트 관리 4대 축을 봅니다:
 
-1. **시스템 프롬프트 조립** (`agent/prompt_builder.py`) — 조각을 만들고
+1. **시스템 프롬프트 ([용어사전](../dict/01_llm_basics.md#system-prompt)) 조립** (`agent/prompt_builder.py`) — 조각을 만들고
 2. **3계층 프롬프트 구조** (`agent/system_prompt.py`) — 조각을 합치되 캐시를 지키고
-3. **컨텍스트 압축** (`agent/context_compressor.py`) — 길어지면 요약하고
-4. **컨텍스트 엔진 추상화** (`agent/context_engine.py`) — 압축 전략을 교체 가능하게
+3. **컨텍스트 압축 ([용어사전](../dict/04_prompt_context.md#context-compression))** (`agent/context_compressor.py`) — 길어지면 요약하고
+4. **컨텍스트 엔진 ([용어사전](../dict/04_prompt_context.md#context-engine)) 추상화** (`agent/context_engine.py`) — 압축 전략을 교체 가능하게
 
 가장 중요한 개념은 **"대화별 프롬프트 캐싱은 신성하다"**(`AGENTS.md`)입니다.
 
@@ -24,7 +24,7 @@ LLM은 **컨텍스트(context)** — 즉 매번 함께 보내는 텍스트 — �
 
 ## 1. 프롬프트 캐싱이 왜 신성한가
 
-- **프롬프트 캐싱(prompt caching)**: 많은 LLM 제공자는 "이전에 본 것과 동일한
+- **프롬프트 캐싱 ([용어사전](../dict/01_llm_basics.md#prompt-caching))(prompt caching)**: 많은 LLM 제공자는 "이전에 본 것과 동일한
   프롬프트 앞부분(prefix)"을 다시 보내면, 그 부분을 훨씬 싸고 빠르게 처리합니다
   (캐시 재사용). 긴 대화는 매 턴 같은 시스템 프롬프트 + 앞선 대화를 다시 보내므로,
   이 캐시가 유지되면 비용이 극적으로 줄어듭니다.
@@ -52,12 +52,12 @@ upstream prefix cache warm.
 [`agent/system_prompt.py` 10-20행](../agent/system_prompt.py#L10-L20)
 (`agent/system_prompt.py` 10-20행)
 
-- **stable(안정 계층)**: 정체성(SOUL.md 또는 `DEFAULT_AGENT_IDENTITY`), 도구
+- **stable(안정 계층)**: 정체성(SOUL.md ([용어사전](../dict/04_prompt_context.md#soul-md)) 또는 `DEFAULT_AGENT_IDENTITY`), 도구
   안내, computer-use 안내, Nous 구독 블록, 도구 사용 강제 안내 + 모델별 운영 안내,
   스킬 프롬프트, 환경 힌트, 플랫폼 힌트. **가장 안정적이라 prefix 캐시의 몸통**입니다.
 - **context(맥락 계층)**: 호출자가 준 `system_message` + 작업 디렉토리(`TERMINAL_CWD`)
-  아래에서 발견한 컨텍스트 파일(AGENTS.md, .cursorrules 등).
-- **volatile(휘발 계층)**: 메모리 스냅샷, `USER.md` 프로필, 외부 메모리 provider
+  아래에서 발견한 컨텍스트 파일 ([용어사전](../dict/04_prompt_context.md#context-file))(AGENTS.md, .cursorrules 등).
+- **volatile(휘발 계층)**: 메모리 스냅샷, `USER.md` 프로필 ([용어사전](../dict/07_gateway_interfaces.md#profile)), 외부 메모리 provider
   블록, 그리고 타임스탬프/세션/모델/provider 한 줄.
 
 > **왜 이 순서인가 (설계 의도):** 캐시는 "앞에서부터 같아야" 재사용됩니다. 그래서
@@ -88,10 +88,10 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
 여기서 특히 중요한 것이 **컨텍스트 파일 위협 스캔**입니다.
 [`agent/prompt_builder.py` 37-45행](../agent/prompt_builder.py#L37-L45)
 (37-45행) — `AGENTS.md`, `.cursorrules`, `SOUL.md` 같은 파일은 시스템 프롬프트에
-그대로 주입되는데, 만약 누군가 그 파일에 **프롬프트 인젝션(promptware)** 을 심어두면
+그대로 주입되는데, 만약 누군가 그 파일에 **프롬프트 인젝션 ([용어사전](../dict/10_security.md#prompt-injection))(promptware)** 을 심어두면
 에이전트가 탈취될 수 있습니다. 그래서 주입 전에 `tools/threat_patterns.py`의 공통
 패턴으로 스캔하고, 매치되면 실제 내용 대신 플레이스홀더로 막습니다(내용은 프롬프트에
-도달하지 못함). 이 패턴은 메모리 도구 스캐너, 도구 결과 구분자 시스템과 **단일
+도달하지 못함). 이 패턴은 메모리 도구 ([용어사전](../dict/05_memory_self_improvement.md#memory-tool)) 스캐너, 도구 결과 구분자 시스템과 **단일
 진실 소스(single source of truth)** 를 공유합니다.
 
 > 이 설계는 "신뢰 경계(trust boundary)"를 명확히 합니다: 파일에서 온 콘텐츠는
@@ -106,7 +106,7 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
 [`agent/context_compressor.py` 1-17행](../agent/context_compressor.py#L1-L17)
 (`agent/context_compressor.py` 1-17행) 핵심 아이디어:
 
-- **보조 모델 사용**(3-4행): 요약은 값싸고 빠른 **보조(auxiliary) 모델**에게 시킵니다.
+- **보조 모델 ([용어사전](../dict/01_llm_basics.md#auxiliary-model)) 사용**(3-4행): 요약은 값싸고 빠른 **보조(auxiliary) 모델**에게 시킵니다.
   주 모델의 비싼 토큰을 요약에 낭비하지 않습니다. (`agent/auxiliary_client.py`의
   `call_llm`, 28행 import.)
 - **머리와 꼬리 보호(head/tail protection)**(4-5, 13행): 대화의 맨 앞(작업 정의)과
@@ -143,7 +143,7 @@ All functions are stateless. AIAgent._build_system_prompt() calls these ...
   도구 노출(예: `lcm_grep`), API 응답의 토큰 사용량 추적.
 - **생명주기(lifecycle)**(18-26행): `on_session_start` → 매 응답 후
   `update_from_response` → 매 턴 후 `should_compress` 체크 → True면 `compress` →
-  실제 세션 경계(CLI 종료/`/reset`/게이트웨이 만료)에서 `on_session_end`.
+  실제 세션 경계(CLI 종료/`/reset`/게이트웨이 ([용어사전](../dict/07_gateway_interfaces.md#gateway)) 만료)에서 `on_session_end`.
   **핵심 주의**(24-25행): `on_session_end`는 매 턴이 아니라 진짜 세션 경계에서만
   호출됩니다.
 

@@ -2,7 +2,7 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-LLM 에이전트가 실제로 "일"을 하려면 도구(tool)가 필요합니다. 터미널 명령을 실행하고,
+LLM ([용어사전](../dict/01_llm_basics.md#llm)) 에이전트가 실제로 "일"을 하려면 도구(tool)가 필요합니다. 터미널 명령을 실행하고,
 파일을 읽고, 웹을 검색하고, 브라우저를 조작하는 것 모두 도구입니다. 이 문서는
 Hermes가 도구를 **어떻게 등록하고(register), 어떻게 발견하며(discover), 어떻게
 실행하는지(dispatch)** 를 라인 단위로 봅니다.
@@ -34,7 +34,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 
 - **도구(tool)**: LLM이 "이 함수를 이런 인자로 실행해줘"라고 요청할 수 있는 기능
   단위. 각 도구는 (a) **스키마**(이름·설명·인자 형식을 담은 JSON — 모델에게 보내짐),
-  (b) **핸들러**(실제 파이썬 함수)로 이루어집니다.
+  (b) **핸들러 ([용어사전](../dict/03_tool_system.md#handler))**(실제 파이썬 함수)로 이루어집니다.
 - **도구 묶음(toolset)**: 관련 도구들의 집합. `toolsets.py`가 정의.
 - 모델이 도구를 요청 → Hermes가 핸들러를 실행 → 결과 문자열을 모델에게 돌려줌 →
   모델이 다음 행동 결정. 이 반복이 [04](04_agent_loop.md)의 루프입니다.
@@ -44,8 +44,8 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 ## 2. 좁은 허리(narrow waist)와 코어 도구 목록
 
 `AGENTS.md`의 핵심 원칙: **모든 코어 도구는 매 API 호출마다 모델에게 전송**됩니다.
-도구가 많을수록 프롬프트가 커지고 비용/지연이 늘어납니다. 그래서 코어 도구 목록은
-의도적으로 좁게 유지되고, 새 기능은 "가장자리"(스킬/플러그인/MCP/서비스 게이트
+도구가 많을수록 프롬프트가 커지고 비용/지연이 늘어납니다. 그래서 코어 도구 ([용어사전](../dict/03_tool_system.md#core-tools)) 목록은
+의도적으로 좁게 유지되고, 새 기능은 "가장자리"(스킬/플러그인/MCP ([용어사전](../dict/08_protocols.md#mcp))/서비스 게이트
 도구)로 들어갑니다.
 
 코어 도구 목록은 `toolsets.py`의 `_HERMES_CORE_TOOLS`입니다.
@@ -57,7 +57,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 - 스킬: `skills_list`, `skill_view`, `skill_manage`
 - 브라우저: `browser_navigate`, `browser_snapshot`, `browser_click`, ... `browser_cdp`
 - 계획/메모리: `todo`, `memory`
-- 세션 검색: `session_search`
+- 세션 검색 ([용어사전](../dict/06_state_retrieval.md#session-search)): `session_search`
 - 코드 실행/위임: `execute_code`, `delegate_task`
 - cron: `cronjob`
 
@@ -92,7 +92,7 @@ run_conversation 루프가 handle_function_call() 을 호출  → registry.dispa
 
 ## 4. 자동 발견: discover_builtin_tools
 
-레지스트리는 "자기 등록"만으로는 부족합니다. 등록하려면 먼저 그 모듈이 **import**
+레지스트리는 "자기 등록 ([용어사전](../dict/03_tool_system.md#self-registration))"만으로는 부족합니다. 등록하려면 먼저 그 모듈이 **import**
 되어야 합니다. 그 일을 하는 함수가 `discover_builtin_tools`입니다.
 [`tools/registry.py` 67-84행](../tools/registry.py#L67-L84)
 ```python
@@ -148,7 +148,7 @@ def discover_builtin_tools(tools_dir: Optional[Path] = None) -> List[str]:
 ## 6. check_fn — 서비스 게이팅과 플래키 억제
 
 `check_fn`은 "이 도구를 지금 쓸 수 있는가?"를 반환하는 함수입니다. 예: Home
-Assistant 도구는 토큰이 설정돼 있을 때만, Docker 백엔드 도구는 Docker 데몬이 떠
+Assistant 도구는 토큰이 설정돼 있을 때만, Docker 백엔드 ([용어사전](../dict/09_execution_infra.md#docker-backend)) 도구는 Docker 데몬이 떠
 있을 때만 노출됩니다. 이것이 `AGENTS.md`의 "서비스 게이트 도구(service-gated tool)"
 개념이며, 조건이 안 맞으면 스키마에서 아예 빠져 **좁은 허리**를 지킵니다.
 
@@ -158,7 +158,7 @@ Assistant 도구는 토큰이 설정돼 있을 때만, Docker 백엔드 도구�
   설정이 한두 턴 안에 반영되도록.
 - **플래키(flaky) 억제** (130-140행, `_CHECK_FN_FAILURE_GRACE_SECONDS = 60.0`):
   Docker 데몬 프로브가 부하로 순간 타임아웃하면 False가 나오는데, 그걸 그대로 믿으면
-  터미널+파일 도구 전체가 갑자기 사라져 서브에이전트가 "read_file 도구가 없다"고
+  터미널+파일 도구 ([용어사전](../dict/03_tool_system.md#file-tools)) 전체가 갑자기 사라져 서브에이전트가 "read_file 도구가 없다"고
   실패합니다(#21658/#5304). 그래서 "최근에 성공했던 체크가 짧은 유예 시간 안에
   실패하면 마지막 성공값(True)을 대신 돌려주되 실패는 캐시하지 않는" 방식으로,
   진짜 다운은 반영하면서 순간적 흔들림은 흡수합니다(`_check_fn_cached`, 154행~).
@@ -190,7 +190,7 @@ def dispatch(self, name: str, args: dict, **kwargs) -> str | dict:
 (`tools/registry.py` 614-644행)
 
 - 이름으로 `ToolEntry`를 찾고, 비동기면 `_run_async`로 이벤트 루프에 브리지(627-629행).
-- 결과는 `_normalize_handler_result`로 문자열/멀티모달 봉투로 정규화(632행).
+- 결과는 `_normalize_handler_result`로 문자열/멀티모달 ([용어사전](../dict/01_llm_basics.md#multimodal)) 봉투로 정규화(632행).
 - **모든 예외를 잡아** `{"error": ...}` JSON으로 변환(633-644행). 도구가 터져도
   루프가 죽지 않고 모델이 오류를 읽고 대응할 수 있게 합니다. 예외 메시지는
   `_sanitize_tool_error`로 살균해, 예외 문자열 속 프레이밍 토큰/CDATA/코드펜스가
@@ -222,9 +222,9 @@ def dispatch(self, name: str, args: dict, **kwargs) -> str | dict:
 - **`tools/file_tools.py`** — `read_file`/`write_file`/`patch`/`search_files`.
   상단(1-26행)에서 `agent/file_safety.py`, `tools/file_operations.py`,
   `agent/redact.py` 등을 조합해 안전한 파일 조작(민감정보 마스킹 포함)을 제공.
-- **`tools/browser_tool.py`** — 접근성 트리(ariaSnapshot) 기반 텍스트 브라우징.
+- **`tools/browser_tool.py`** — 접근성 트리 ([용어사전](../dict/08_protocols.md#accessibility-tree))(ariaSnapshot) 기반 텍스트 브라우징.
   local Chromium / Browserbase / Browser Use 백엔드 자동 감지(1-38행). 저수준
-  제어는 CDP 기반(`browser_cdp`). → [tech_background/08_cdp_browser.md](tech_background/08_cdp_browser.md)
+  제어는 CDP ([용어사전](../dict/08_protocols.md#cdp)) 기반(`browser_cdp`). → [tech_background/08_cdp_browser.md](tech_background/08_cdp_browser.md)
 - **`tools/mcp_tool.py`** — 외부 MCP 서버의 도구를 동적으로 등록/호출. 그래서
   `discover_builtin_tools`에서 **일부러 제외**되어 있습니다(67-74행) — 정적
   자기등록이 아니라 런타임 동적 등록이기 때문. → [tech_background/05_mcp_and_acp.md](tech_background/05_mcp_and_acp.md)

@@ -2,14 +2,14 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-Hermes는 모든 대화를 **SQLite 데이터베이스** 하나(`state.db`)에 저장합니다. 이
-덕분에 `hermes -c`로 세션을 이어가고, 과거 대화를 전문 검색(full-text search)하며,
+Hermes는 모든 대화를 **SQLite ([용어사전](../dict/06_state_retrieval.md#sqlite)) 데이터베이스** 하나(`state.db`)에 저장합니다. 이
+덕분에 `hermes -c`로 세션을 이어가고, 과거 대화를 전문 검색 ([용어사전](../dict/06_state_retrieval.md#fts))(full-text search)하며,
 여러 메시징 플랫폼이 동시에 써도 안전하게 동작합니다. 이 문서는 그 저장소인
 `hermes_state.py`(약 9,900줄)의 핵심 설계 4가지를 봅니다:
 
 1. **SQLite 스키마** (무엇을 어떤 표에 저장하는가)
-2. **WAL 모드** (동시 접근 안전성)와 파일시스템 폴백
-3. **FTS5 전문 검색** (과거 대화를 빠르게 찾기)
+2. **WAL 모드 ([용어사전](../dict/06_state_retrieval.md#wal))** (동시 접근 안전성)와 파일시스템 폴백
+3. **FTS5 ([용어사전](../dict/06_state_retrieval.md#fts5)) 전문 검색** (과거 대화를 빠르게 찾기)
 4. **`parent_session_id` 체인** (압축으로 인한 세션 분할)
 
 ### 소목차
@@ -165,10 +165,10 @@ CREATE TRIGGER IF NOT EXISTS messages_fts_insert AFTER INSERT ON messages ...
 
 ## 5. 트라이그램 인덱스 — CJK(한중일) 검색
 
-기본 FTS5 토크나이저(unicode61)는 한글/한자/일본어를 글자 단위로 쪼개 구(phrase)
+기본 FTS5 토크나이저 ([용어사전](../dict/06_state_retrieval.md#tokenizer))(unicode61 ([용어사전](../dict/06_state_retrieval.md#unicode61)))는 한글/한자/일본어를 글자 단위로 쪼개 구(phrase)
 검색이 깨집니다. 그래서 별도의 **트라이그램(trigram)** 인덱스를 둡니다.
 [`hermes_state.py` 1289-1316행](../hermes_state.py#L1289-L1316)
-- 트라이그램 토크나이저(1315행)는 겹치는 3바이트 조각을 만들어 어떤 문자 체계든
+- 트라이그램 토크나이저 ([용어사전](../dict/06_state_retrieval.md#trigram))(1315행)는 겹치는 3바이트 조각을 만들어 어떤 문자 체계든
   부분 문자열 검색이 되게 합니다(1290-1292행).
 - **비용 최적화**(1293-1302행): 트라이그램 인덱스는 원문의 약 2.6배로 가장 비싼
   인덱스인데, `role='tool'` 행이 메시지 바이트의 ~90%이면서 대부분 기계 잡음

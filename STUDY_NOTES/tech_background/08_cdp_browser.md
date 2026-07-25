@@ -2,10 +2,10 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-에이전트가 실제 웹 브라우저를 조작하는 기반 기술인 **CDP**를 다룹니다. 웹 자동화의
+에이전트가 실제 웹 브라우저를 조작하는 기반 기술인 **CDP ([용어사전](../../dict/08_protocols.md#cdp))**를 다룹니다. 웹 자동화의
 계보(Selenium/WebDriver → CDP → Puppeteer/Playwright)와, CDP를 이해하는 데 필요한
-하위 개념들(WebSocket, 도메인/명령/이벤트, 헤드리스 브라우저, 접근성 트리, 클라우드
-브라우저)을 상세히 풀고, LLM 에이전트가 브라우저를 "보는" 방식의 발전과 보안
+하위 개념들(WebSocket ([용어사전](../../dict/08_protocols.md#websocket)), 도메인/명령/이벤트, 헤드리스 브라우저 ([용어사전](../../dict/08_protocols.md#headless)), 접근성 트리 ([용어사전](../../dict/08_protocols.md#accessibility-tree)), 클라우드
+브라우저)을 상세히 풀고, LLM ([용어사전](../../dict/01_llm_basics.md#llm)) 에이전트가 브라우저를 "보는" 방식의 발전과 보안
 트레이드오프, 그리고 Hermes의 고수준 도구 + CDP 탈출구 구조를 연결합니다.
 
 ### 소목차
@@ -67,7 +67,7 @@ CDP의 수백 개 명령은 기능별 **도메인**으로 묶여 있습니다: `
 LLM 에이전트가 페이지를 "보는" 방식에는 스펙트럼이 있습니다:
 
 1. **원시 HTML/DOM**: 정보는 다 있지만 잡음(스크립트, 스타일)이 커서 토큰 낭비.
-2. **스크린샷(비전)**: 사람처럼 보지만 비전 모델 필요 + 좌표 클릭은 깨지기 쉬움.
+2. **스크린샷(비전)**: 사람처럼 보지만 비전 모델 ([용어사전](../../dict/01_llm_basics.md#vision-model)) 필요 + 좌표 클릭은 깨지기 쉬움.
 3. **접근성 트리**: 스크린리더용으로 브라우저가 이미 만들어 두는 **의미 요약 트리**
    (역할/이름/상태만 남음). 잡음이 적고, 각 요소에 **참조(ref)** 를 붙여 "ref=e17을
    클릭해"처럼 좌표 없이 조작할 수 있어 현재 사실상의 표준입니다.
@@ -107,9 +107,9 @@ graph TD
     GUARD["허용 메서드 화이트리스트"] --> ESCAPE
 ```
 
-- 브라우저 도구는 [01_tool_calling.md](01_tool_calling.md)의 도구 스키마/디스패치
+- 브라우저 도구는 [01_tool_calling.md](01_tool_calling.md)의 도구 스키마 ([용어사전](../../dict/03_tool_system.md#tool-schema))/디스패치 ([용어사전](../../dict/03_tool_system.md#dispatch))
   위에 올라가는 하나의 도구군일 뿐입니다 — CDP는 그 도구의 **구현 세부**입니다.
-- 웹 페이지 내용은 신뢰할 수 없는 입력(프롬프트 인젝션 벡터)이라는 점에서
+- 웹 페이지 내용은 신뢰할 수 없는 입력(프롬프트 인젝션 ([용어사전](../../dict/10_security.md#prompt-injection)) 벡터)이라는 점에서
   [05](05_mcp_and_acp.md) 7절의 보안 경계 논의와 연결됩니다.
 
 ---
@@ -127,10 +127,10 @@ graph TD
    파이어폭스/웹킷) 지원으로 확장. 자동 대기(auto-wait), ariaSnapshot 등 현대적
    기능의 표준을 세웁니다. (한편 W3C는 WebDriver의 후속으로 CDP의 장점을 흡수한
    **WebDriver BiDi** 표준화를 진행 중입니다.)
-6. **2023~ — LLM 에이전트의 브라우저 사용**: WebArena 같은 벤치마크, 접근성 트리
+6. **2023~ — LLM 에이전트의 브라우저 사용**: WebArena 같은 벤치마크 ([용어사전](../../dict/13_model_learning.md#benchmark)), 접근성 트리
    기반 조작, OpenAI Operator/Computer-Use류 제품까지 — "모델이 웹을 조작"하는
    패턴이 정립됩니다.
-7. **2024~ — 클라우드 브라우저 인프라**: Browserbase, Browser Use 등이 에이전트
+7. **2024~ — 클라우드 브라우저 ([용어사전](../../dict/08_protocols.md#cloud-browser)) 인프라**: Browserbase, Browser Use 등이 에이전트
    전용 원격 브라우저를 상품화합니다.
 
 ---
@@ -154,7 +154,7 @@ graph TD
 
 [05_tools.md](../05_tools.md)의 브라우저 도구가 여기에 해당합니다.
 
-- **고수준 브라우저 도구**: `tools/browser_tool.py`가 로컬 크로미움/Browserbase/
+- **고수준 브라우저 도구 ([용어사전](../../dict/03_tool_system.md#browser-tool))**: `tools/browser_tool.py`가 로컬 크로미움/Browserbase/
   Browser Use(2-5절의 클라우드 브라우저)를 **동일한 인터페이스**로 노출하고,
   접근성 트리(`ariaSnapshot`)와 ref 선택자(2-4절)로 조작합니다.
 - **저수준 CDP 탈출구**(2-6절): `tools/browser_cdp_tool.py`가 단일 도구

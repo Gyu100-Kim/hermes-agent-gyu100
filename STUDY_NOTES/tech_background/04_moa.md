@@ -2,9 +2,9 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-하나의 답을 만들 때 **여러 LLM을 조합**해 품질을 높이는 기법인 Mixture-of-Agents를
-다룹니다. 핵심 정의와 함께, 이를 이해하는 데 필요한 하위 개념들(앙상블, 제안자/
-종합자 구조, 계층(layer), MoE와의 구분, 자기일관성 샘플링, LLM 심판)을 상세히 풀고,
+하나의 답을 만들 때 **여러 LLM ([용어사전](../../dict/01_llm_basics.md#llm))을 조합**해 품질을 높이는 기법인 Mixture-of-Agents ([용어사전](../../dict/02_agent_core.md#moa))를
+다룹니다. 핵심 정의와 함께, 이를 이해하는 데 필요한 하위 개념들(앙상블 ([용어사전](../../dict/02_agent_core.md#ensemble)), 제안자/
+종합자 구조, 계층(layer), MoE와의 구분, 자기일관성 ([용어사전](../../dict/02_agent_core.md#self-consistency)) 샘플링, LLM 심판 ([용어사전](../../dict/02_agent_core.md#llm-as-judge)))을 상세히 풀고,
 근간이 되는 앙상블 학습의 역사와 MoA 논문 계보를 정리한 뒤 Hermes의 `/moa` 구현과
 연결합니다.
 
@@ -87,7 +87,7 @@ MoA를 이해하면 같이 알아두면 좋은 이웃 개념들:
 - **자기일관성(self-consistency)**: 같은 모델에서 여러 답을 샘플링해 다수결.
   "여러 모델" 대신 "여러 시도"를 쓰는 단순 버전 (Wang et al., 2022).
 - **LLM-as-a-Judge**: 강한 LLM에게 후보 답변들을 채점/선택하게 하는 것. 종합자
-  대신 "심판"을 쓰는 변형이며, 평가 벤치마크(MT-Bench 등)에서도 널리 쓰입니다.
+  대신 "심판"을 쓰는 변형이며, 평가 벤치마크 ([용어사전](../../dict/13_model_learning.md#benchmark))(MT-Bench 등)에서도 널리 쓰입니다.
 - **LLM-Blender** (2023): 후보들을 쌍대 비교(pairwise ranking)로 순위 매긴 뒤
   상위 후보들을 융합(fusion) — MoA의 직접적 선행 연구입니다.
 - **라우팅(routing)**: 질문을 보고 "가장 적합한 한 모델"에게만 보내는 기법.
@@ -142,7 +142,7 @@ MoA의 비용 구조를 구체적으로 보면:
 
 - 제안자 N개 + 종합자 1개 = 최소 **N+1배의 API 호출** (다층이면 층수만큼 곱).
 - 지연도 "가장 느린 제안자 + 종합자" 순서로 직렬 구간이 생깁니다.
-- 도구 호출 루프 안에서 매 스텝 MoA를 쓰면 비용이 루프 길이만큼 곱해지므로,
+- 도구 호출 루프 ([용어사전](../../dict/02_agent_core.md#tool-calling-loop)) 안에서 매 스텝 MoA를 쓰면 비용이 루프 길이만큼 곱해지므로,
   보통 **단발성 질문/최종 답변 생성**에만 씁니다.
 
 그래서 설계 선택지는: (a) 항상 켬(품질 최우선), (b) 라우팅으로 선별 적용,
@@ -158,7 +158,7 @@ MoA의 비용 구조를 구체적으로 보면:
   (`run_conversation`이 `moa_config`를 받고, `decode_moa_turn`으로 사용자 메시지에서
   MoA 설정을 디코드.)
 - **설정 CLI**: `hermes moa`(list/configure/delete)로 MoA에 쓸 provider/model 슬롯을
-  구성합니다 — 2-2절의 제안자/종합자 구성에 해당합니다.
+  구성합니다 — 2-2절의 제안자/종합자 ([용어사전](../../dict/02_agent_core.md#proposer-aggregator)) 구성에 해당합니다.
   [`hermes_cli/main.py` 14403-14416행](../../hermes_cli/main.py#L14403-L14416)
 - 실제 MoA 실행 로직은 `agent/moa_loop.py`, 설정 인코딩/디코딩은
   `hermes_cli/moa_config.py`에 있습니다.

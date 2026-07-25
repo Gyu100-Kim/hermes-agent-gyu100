@@ -2,10 +2,10 @@
 
 ## 이 문서에서 다루는 큰 맥락
 
-에이전트가 셸 명령을 실행하는 **격리된 실행 환경(execution environment)** 들을
+에이전트가 셸 명령을 실행하는 **격리된 실행 환경 ([용어사전](../../dict/09_execution_infra.md#execution-environment))(execution environment)** 들을
 다룹니다. "임의 명령을 실행하는 에이전트"의 위험을 다스리는 샌드박싱 개념부터,
 격리 기술의 계보(가상머신 → 컨테이너 → 서버리스/원격 개발 환경)와 각 기술의 하위
-개념(네임스페이스, cgroups, 이미지, 루트리스 컨테이너), 그리고 "어떤 백엔드든
+개념(네임스페이스, cgroups ([용어사전](../../dict/09_execution_infra.md#cgroups)), 이미지, 루트리스 컨테이너 ([용어사전](../../dict/09_execution_infra.md#rootless))), 그리고 "어떤 백엔드든
 에이전트에게는 똑같아 보이게" 만드는 추상화 설계까지 상세히 풀고, Hermes의
 `tools/environments/` 구현과 연결합니다.
 
@@ -27,7 +27,7 @@
 강력한 능력이자 가장 큰 위험입니다:
 
 - 실수/환각으로 호스트 파일을 지우거나 설정을 망가뜨릴 수 있고,
-- 프롬프트 인젝션([05](05_mcp_and_acp.md) 7절)에 걸리면 악의적 명령의 통로가 되며,
+- 프롬프트 인젝션 ([용어사전](../../dict/10_security.md#prompt-injection))([05](05_mcp_and_acp.md) 7절)에 걸리면 악의적 명령의 통로가 되며,
 - 호스트의 민감정보(SSH 키, 브라우저 쿠키)에 접근할 수 있습니다.
 
 **샌드박스(sandbox)** 는 이 위험을 담는 울타리입니다 — 명령이 볼 수 있는 파일,
@@ -54,7 +54,7 @@
 
 ### 2-2. 컨테이너 이미지와 재현성
 
-컨테이너의 또 다른 가치는 격리만이 아니라 **재현성**입니다. **이미지(image)** 는
+컨테이너의 또 다른 가치는 격리만이 아니라 **재현성 ([용어사전](../../dict/09_execution_infra.md#reproducibility))**입니다. **이미지(image)** 는
 "파일시스템 + 설치된 패키지"의 불변 스냅샷이라서, 같은 이미지에서 띄운 컨테이너는
 어디서든 같은 환경입니다. 에이전트 관점에서는 "실험을 깨끗한 환경에서 반복"할 수
 있다는 뜻이며, SWE-bench류 평가 러너들이 컨테이너를 쓰는 이유입니다.
@@ -84,7 +84,7 @@ Docker 데몬은 전통적으로 루트 권한이 필요해, 여러 사용자가
   상태가 자연히 유지되지만, 원격/컨테이너에서 연결이 끊기면 상태가 통째로 날아가고,
   멈춘 명령 하나가 셸 전체를 붙듭니다.
 - **spawn-per-call**: 명령마다 새 `bash -c` 프로세스를 띄움. 견고하지만(명령 하나의
-  죽음이 다음에 영향 없음) 상태가 매번 초기화됩니다. 해법: 초기에 세션 스냅샷
+  죽음이 다음에 영향 없음) 상태가 매번 초기화됩니다. 해법: 초기에 세션 스냅샷 ([용어사전](../../dict/09_execution_infra.md#session-snapshot))
   (env/함수/alias)을 캡처해 매 명령 전에 다시 source하고, CWD는 명령 출력에 심은
   마커나 임시 파일로 추적 — **상태를 "셸 프로세스"가 아니라 "데이터"로 유지**하는
   발상입니다. Hermes가 이 방식입니다(7절).
@@ -150,8 +150,8 @@ graph TD
    개명, Linux Foundation 산하).
 5. **2018 — Firecracker** (AWS): microVM으로 "VM급 격리 + 컨테이너급 속도"를 달성,
    서버리스 인프라의 기반이 됩니다.
-6. **2020s — 서버리스 컴퓨트/원격 개발 환경 상품화**: Modal, Codespaces, Daytona 등.
-7. **2023~ — 에이전트 샌드박스 시대**: 코드를 실행하는 LLM 에이전트가 보편화되며
+6. **2020s — 서버리스 컴퓨트 ([용어사전](../../dict/09_execution_infra.md#serverless))/원격 개발 환경 상품화**: Modal, Codespaces, Daytona 등.
+7. **2023~ — 에이전트 샌드박스 시대**: 코드를 실행하는 LLM ([용어사전](../../dict/01_llm_basics.md#llm)) 에이전트가 보편화되며
    "에이전트에게 안전한 실행 공간"이 독립된 인프라 상품군(E2B, Modal Sandboxes 등)
    으로 성장합니다. SWE-bench 평가 러너들도 컨테이너 격리를 표준으로 씁니다.
 
@@ -202,7 +202,7 @@ graph TD
 - Apptainer(Singularity) — <https://apptainer.org/>
 - Modal — <https://modal.com/docs> / Daytona — <https://www.daytona.io/>
 - Firecracker microVM — <https://firecracker-microvm.github.io/>
-- 리눅스 네임스페이스 매뉴얼 — <https://man7.org/linux/man-pages/man7/namespaces.7.html>
+- 리눅스 네임스페이스 ([용어사전](../../dict/09_execution_infra.md#namespace)) 매뉴얼 — <https://man7.org/linux/man-pages/man7/namespaces.7.html>
 
 **논문 (배경)**
 - Kurtzer et al., "Singularity: Scientific containers for mobility of compute" (2017, PLOS ONE)

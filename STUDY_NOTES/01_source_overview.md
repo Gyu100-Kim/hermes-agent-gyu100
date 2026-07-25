@@ -8,7 +8,7 @@
 1. 최상위 디렉토리 지도 (무엇이 어디에 있는가)
 2. "최상위 단일 파일 모듈" vs "패키지(디렉토리)"의 구분과 그 이유
 3. 진입점(entry point)들이 무엇이고 어디서 시작하는가
-4. 사용 언어(Python 3.11~3.13 중심, 보조로 JavaScript/TypeScript/Nix)
+4. 사용 언어(Python 3.11~3.13 중심, 보조로 JavaScript/TypeScript/Nix ([용어사전](../dict/09_execution_infra.md#nix)))
 
 ### 소목차
 - [1. 한눈에 보는 저장소](#1-한눈에-보는-저장소)
@@ -22,8 +22,8 @@
 
 ## 1. 한눈에 보는 저장소
 
-Hermes Agent는 **하나의 에이전트 코어**를 여러 인터페이스(CLI, 메시징 게이트웨이,
-TUI, 데스크톱 앱, ACP)에서 공유하는 구조입니다. `AGENTS.md`(개발 가이드) 첫머리는
+Hermes Agent는 **하나의 에이전트 코어**를 여러 인터페이스(CLI, 메시징 게이트웨이 ([용어사전](../dict/07_gateway_interfaces.md#gateway)),
+TUI ([용어사전](../dict/07_gateway_interfaces.md#tui)), 데스크톱 앱 ([용어사전](../dict/07_gateway_interfaces.md#desktop-app)), ACP ([용어사전](../dict/08_protocols.md#acp)))에서 공유하는 구조입니다. `AGENTS.md`(개발 가이드) 첫머리는
 이를 이렇게 요약합니다:
 
 > "Hermes is a personal AI agent that runs the same agent core across a CLI, a
@@ -91,9 +91,9 @@ TUI, 데스크톱 앱, ACP)에서 공유하는 구조입니다. `AGENTS.md`(개�
 | `locales/`, `assets/`, `infographic/`, `infograficos/` | 번역/자산/인포그래픽 |
 | `scripts/`, `setup-hermes.sh`, `setup.py` | 설치/실행 스크립트 |
 
-> **왜 이렇게 나눴는가 (설계 의도):** `AGENTS.md`의 "Footprint Ladder"는 새 기능을
-> 넣을 때 "코어 도구"는 최후의 수단이고, 가능하면 CLI 명령+스킬 → 서비스 게이트
-> 도구 → 플러그인 → MCP 서버 순으로 **가장자리에** 넣으라고 규정합니다. 그래서
+> **왜 이렇게 나눴는가 (설계 의도):** `AGENTS.md`의 "Footprint Ladder ([용어사전](../dict/11_design_principles.md#footprint-ladder))"는 새 기능을
+> 넣을 때 "코어 도구 ([용어사전](../dict/03_tool_system.md#core-tools))"는 최후의 수단이고, 가능하면 CLI 명령+스킬 → 서비스 게이트
+> 도구 → 플러그인 → MCP 서버 ([용어사전](../dict/08_protocols.md#mcp-server)) 순으로 **가장자리에** 넣으라고 규정합니다. 그래서
 > 코어(`run_agent.py`, `agent/`)는 좁게 유지하고, 기능 대부분은
 > `tools/`·`skills/`·`plugins/`에 쌓입니다. 이 원칙이 디렉토리 구조에 그대로
 > 드러납니다.
@@ -155,7 +155,7 @@ hermes-acp = "acp_adapter.entry:main"  # 에디터용 ACP 서버
 - `hermes-agent` → `run_agent.py`의 `main()`
 - `hermes-acp` → `acp_adapter/entry.py`의 `main()`
 
-자세한 부트스트랩/디스패치 흐름은 [03_entrypoints.md](03_entrypoints.md)에서
+자세한 부트스트랩/디스패치 ([용어사전](../dict/03_tool_system.md#dispatch)) 흐름은 [03_entrypoints.md](03_entrypoints.md)에서
 라인 단위로 봅니다.
 
 ---
@@ -189,7 +189,7 @@ hermes-acp = "acp_adapter.entry:main"  # 에디터용 ACP 서버
    장시간 대화는 매 턴 캐시된 프리픽스를 재사용합니다. 과거 컨텍스트를 바꾸거나
    시스템 프롬프트를 중간에 재구성하면 이 캐시가 무효화되어 비용이 폭증합니다.
    그래서 시스템 프롬프트는 세션 동안 바이트 단위로 고정되며, 유일한 예외가
-   **컨텍스트 압축**입니다. → [07](07_prompt_context.md)
+   **컨텍스트 압축 ([용어사전](../dict/04_prompt_context.md#context-compression))**입니다. → [07](07_prompt_context.md)
 2. **"코어는 좁은 허리, 기능은 가장자리(narrow waist)."** 모든 코어 도구는 매
    API 호출마다 전송되므로, 새 코어 도구를 추가하는 기준이 매우 높습니다. 대부분의
    새 기능은 CLI 명령+스킬, 서비스 게이트 도구, 플러그인으로 들어옵니다.
