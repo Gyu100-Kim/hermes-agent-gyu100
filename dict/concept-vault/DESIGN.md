@@ -159,7 +159,7 @@
 
 | Label | 의미 | 주요 속성 |
 |---|---|---|
-| `Concept` | 사용자가 학습·저장한 개념 (자료의 Content) | `id`(슬러그, 전역 고유), `name_ko`, `name_en`, `aliases[]`(동의어·다른 표기 목록), `definition`(사용자 언어 정의), `example`, `origin`(최초 등장 시기 — 참고 속성, 자유 정밀도 문자열), `embedding`(벡터), `status`(`draft`/`approved`/`merged` — [4.3](#43-별칭용어-통일-모델) 참조), `created_at`, `updated_at`, `revision_no` |
+| `Concept` | 사용자가 학습·저장한 개념 (자료의 Content) | `id`(슬러그, 전역 고유), `name_ko`, `name_en`, `aliases[]`(동의어·다른 표기 목록), `definition`(사용자 언어 정의), `example`, `origin`(최초 등장 시기 — 참고 속성, 자유 정밀도 문자열), `embedding`(벡터), `embedding_version`(임베딩 모델 식별자 — 모델 교체 시 재임베딩 대상 식별, [5.2](#52-운영-관점-결함-분석과-고도화-결정) #4), `status`(`draft`/`approved`/`merged` — [4.3](#43-별칭용어-통일-모델) 참조), `created_at`, `updated_at`, `revision_no` |
 | `ConceptClass` | 개념의 역할 분류 (자료의 ContentClass) | `id`, `name`, `description`. **소수 유지** — 초기값은 dict1의 9종(Concept·Component·Technology·Mechanism·Principle·Protocol·Artifact·Research·Threat)을 도메인 중립적으로 일반화한 것에서 시작. 종류의 추가·이름 변경·제거는 기능 6(클래스 관리)으로 사용자가 수행 |
 | `Community` | 기능 3(클러스터링)이 그래프 구조에서 발견해 생성하는 군집 노드 — ConceptClass(사람이 정의한 역할 분류)와 구분되는 **구조 기반** 분류 축 | `id`, `name`(LLM 명명), `description`(LLM 생성), `algorithm`(louvain/leiden), `run_id`(클러스터링 실행 식별자), `created_at`, `size` |
 | `ConceptRevision` | 개념의 과거 버전 스냅숏 | `revision_no`, `definition`, `example`, `saved_at`, `reason`(upgrade/merge/rename) |
@@ -182,7 +182,7 @@ ID 네임스페이스는 자료의 규약을 계승: `concept:` / `class:` / `co
 ### 4.3 별칭(용어 통일) 모델
 
 "같은 개념을 다른 이름으로 저장"하는 문제는 발견 시점에 따라 두 가지 방식으로 처리한다
-(두 메커니즘을 섮어 쓰지 않도록 명확히 구분):
+(두 메커니즘을 섞어 쓰지 않도록 명확히 구분):
 
 1. **등록 시점에 별칭임이 확인된 경우 (사전 차단)** — 새 노드를 만들지 않고 정본 Concept의
    `aliases[]` 속성에 새 표기를 추가한다. 작성했던 정의 내용은 필요 시 기능 5(업그레이드)로
@@ -240,51 +240,122 @@ graph LR
         f5["5 개념 업그레이드"]
         f6["6 클래스 관리"]
     end
-    subgraph backend["백엔드 API 서버 (FastAPI)"]
-        api["REST API"]
-        pipeline["관계 분석 파이프라인 (LLM)"]
-        cluster["클러스터링 서비스 (GDS 호출 + LLM 명명)"]
-        validator["무결성 검증기"]
+    subgraph backend["백엔드 API 서버 (FastAPI — 무상태)"]
+        api["REST API (동기 조회·저장 + 작업 등록)"]
+        validator["무결성 검증기 (commit 트랜잭션)"]
+    end
+    subgraph workers["비동기 워커 (별도 프로세스)"]
+        pipeline["관계 분석 파이프라인"]
+        cluster["클러스터링 서비스 (GDS + LLM 명명)"]
+        reembed["재임베딩 작업"]
     end
     subgraph store["저장소"]
-        neo4j["Neo4j CE + GDS (벡터·전문 인덱스 포함)"]
+        neo4j["Neo4j CE + GDS (벡터·전문 인덱스)"]
+        redis["Redis (작업 큐·캠시)"]
     end
-    llm["LLM API (관계 분석·용어 통일·클러스터 서술)"]
+    gateway["LLM 게이트웨이 (재시도·폴백·비용 집계·프롬프트 버전)"]
+    llm["LLM API"]
     emb["임베딩 API"]
+    otel["관측성 (OTel 트레이스·메트릭·감사 로그)"]
 
     frontend --> api
-    api --> pipeline
-    api --> cluster
+    api --> redis
+    redis --> workers
     api --> validator
-    pipeline --> llm
-    pipeline --> emb
-    pipeline --> neo4j
-    cluster --> neo4j
-    cluster --> llm
     validator --> neo4j
     api --> neo4j
+    pipeline --> gateway
+    cluster --> gateway
+    reembed --> gateway
+    gateway --> llm
+    gateway --> emb
+    pipeline --> neo4j
+    cluster --> neo4j
+    reembed --> neo4j
+    backend -.-> otel
+    workers -.-> otel
 ```
+
+### 5.1 구성요소
 
 | 구성요소 | 선택 | 이유 |
 |---|---|---|
 | 프론트엔드 | React SPA + **Cytoscape.js**(또는 react-force-graph) | 기능 4의 그래프 시각화에 성숙한 레이아웃(계층형·force)·상호작용(클릭/확장) 제공 |
-| 백엔드 | Python **FastAPI** + `neo4j` 공식 드라이버 | LLM 파이프라인(Python 생태계)과 자연스럽게 결합, 비동기 처리 |
-| 그래프 DB | Neo4j CE 5.x + GDS 플러그인 (Docker) | [3장](#3-오픈소스-지식-그래프-db-선정) |
-| LLM | OpenAI 호환 API (교체 가능 추상화) | 관계 분석·용어 통일·클러스터 명명/서술 |
-| 임베딩 | OpenAI 호환 임베딩 API (교체 가능) | `Concept.embedding` 생성. 정의+이름을 결합한 텍스트를 임베딩 |
+| 백엔드 API | Python **FastAPI** + `neo4j` 공식 드라이버 — **무상태(stateless)** | 동기 조회/저장만 담당. 프로세스 상태를 갖지 않아 재시작·증설이 자유로움 |
+| 비동기 워커 | 동일 코드베이스의 별도 프로세스 + **내구성 작업 큐(Redis + ARQ/RQ)** | LLM 포함 장시간 작업을 API에서 분리 — [5.3](#53-비동기-작업job-모델) |
+| 그래프 DB | Neo4j CE 5.x + GDS 플러그인 (Docker) | [3장](#3-오픈소스-지식-그래프-db-선정). 유일한 영구 저장소(single source of truth) |
+| 큐·캠시 | Redis | 작업 큐 + 검색 질의 임베딩 캠시(같은 질의 재임베딩 방지) |
+| LLM 접근 | **LLM 게이트웨이 계층** (LiteLLM 등 OpenAI 호환 추상화) | 모든 LLM·임베딩 호출을 한 계층으로 집중 — 재시도·타임아웃·모델 폴백·토큰/비용 집계·프롬프트 버전 관리를 한 곳에서 처리 |
 
 **초안 격리 원칙**: LLM 분석 결과는 사용자가 승인하기 전까지 `status='draft'`인 노드/제안
 객체로만 존재하며, 승인 시점에만 본 그래프(`approved`)에 반영된다. 검색·클러스터링·시각화는
 `approved`만 대상으로 한다.
 
-**비동기·예외 처리**:
+### 5.2 운영 관점 결함 분석과 고도화 결정
 
-- 관계 분석(`analyze`)과 클러스터링은 LLM 호출을 포함해 수 초~수십 초가 걸릴 수 있으므로
-  **비동기 작업**으로 처리한다 — 요청 시 `202 Accepted` + 작업 id를 반환하고, 프론트는 진행
-  상태를 폴링한다.
-- LLM/임베딩 API 장애 시 자동 제안 없이 **수동 모드**로 진행할 수 있다(사용자가 직접 클래스·
-  관계를 지정해 저장). 임베딩 생성 실패 노드는 큐에 남겨 복구 후 재계산한다.
+초기 설계(API 프로세스 단일 구성)를 서비스 운영 관점에서 재검토해 식별한 결함과,
+최근 지식 그래프+LLM 서비스(GraphRAG 계열)·LLM 운영(LLMOps) 분야에서 정착된 관행을
+반영한 결정입니다.
+
+| # | 결함(기존 설계) | 문제 | 고도화 결정 |
+|---|---|---|---|
+| 1 | 장시간 LLM 작업을 API 프로세스 안에서 실행 | 배포·재시작 시 진행 중 작업 유실, API 응답성 저하, 수평 확장 불가 | **API/워커 분리** + Redis 기반 내구성 큐. API는 작업 등록만, 실행은 워커가 |
+| 2 | 작업 상태·재시도·중복 실행 정책 미정의 | 실패 작업이 조용히 사라지거나 이중 적용될 위험 | 작업 상태 머신 + 멱등성 키 + DLQ — [5.3](#53-비동기-작업job-모델) |
+| 3 | LLM 호출이 기능별 코드에 분산 | 모델 교체·비용 추적·장애 대응을 기능마다 반복 구현 | **LLM 게이트웨이 계층** 단일화(재시도·타임아웃·폴백·비용 집계·프롬프트 버전) |
+| 4 | 임베딩 모델 교체 시나리오 부재 | 모델이 바뀌면 기존 벡터와 비교 불가(검색 품질 붕괴) | `Concept.embedding_version` 속성 + 백그라운드 재임베딩 작업. 버전이 다른 벡터는 검색에서 혼용하지 않음 |
+| 5 | 스키마·제약·인덱스 변경 관리 부재 | 환경마다 스키마가 달라지고 변경 이력 추적 불가 | **버전 관리되는 마이그레이션**(neo4j-migrations 방식) — 기동 시 자동 적용·기록 |
+| 6 | 관측성(로그·메트릭·트레이스) 미정의 | 장애 원인 추적·비용 파악 불가 | OpenTelemetry 기반 통합 관측성 + LLM 감사 로그 — [5.4](#54-관측성운영) |
+| 7 | LLM 제안 품질의 회귀 감지 부재 | 프롬프트·모델 변경이 관계 판정 품질을 조용히 떨어뜨려도 모름 | **골든셋 평가(eval)** — 대표 사슬(BERT→Transformer→Attention 등) 기반 회귀 테스트를 프롬프트/모델 변경 시 실행 |
+| 8 | 백업은 있으나 복구 검증 없음 | 복구 불가능한 백업은 백업이 아님 | 주기적 **복구 리허설**(export를 빈 인스턴스에 복원 후 무결성 규칙 전 항목 검증) 자동화 |
+| 9 | 인증·접근 통제 미정의 | 개인 서비스라도 외부 노출 시 무방비 | 토큰 인증(단일 사용자용 bearer) + rate limit. 멀티유저 확장 시 인증 계층만 교체 |
+| 10 | 커뮤니티 요약을 매번 전량 생성 | 그래프가 커질수록 클러스터링 비용 증가 | GraphRAG 계열의 관행 수용: 커뮤니티 요약은 캐시(재사용)하고, 구성이 변하지 않은 군집은 재명명 생략(lazy 재생성) |
+
+참고한 사상: Microsoft GraphRAG의 커뮤니티 요약(community summaries) 구조는 본 설계의
+기능 3(Leiden + LLM 서술)과 같은 패턴이며, LazyGraphRAG의 "필요할 때만 요약 생성"
+인사이트를 재클러스터링 비용 절감에 적용했습니다. 운영 측면은 12-factor(무상태 프로세스·
+설정의 환경 분리)와 LLMOps 관행(게이트웨이 집중화·비용 가시화·골든셋 eval)을 따릅니다.
+
+### 5.3 비동기 작업(Job) 모델
+
+관계 분석(`analyze`)·병합 재분석(기능 5)·클러스터링·재임베딩은 모두 동일한 작업 모델로
+처리한다:
+
+- **상태 머신**: `queued → running → succeeded | failed | cancelled`. 상태·진행률·결과는
+  `GET /jobs/{id}`로 조회(요청 시 `202 Accepted` + 작업 id 반환, 프론트 폴링).
+- **멱등성**: 같은 대상에 대한 같은 종류의 작업은 멱등성 키(예: `analyze:draft:{id}:{rev}`)로
+  중복 등록을 방지 — 진행 중이면 기존 작업 id를 반환.
+- **재시도·DLQ**: 일시 오류(네트워크·율 제한)는 지수 백오프로 자동 재시도(최대 3회),
+  계속 실패는 dead-letter 큐로 이동해 원인과 함께 보존·표시(조용한 유실 금지).
+- **안전한 재실행**: 모든 작업은 결과를 제안 객체/비활성 노드로만 쓰고(초안 격리 원칙),
+  본 그래프 반영은 사용자 commit 트랜잭션에서만 일어나므로 작업 재실행이 그래프를 오염하지
+  않는다.
+- **수동 모드 fallback**: LLM/임베딩 장애 시 자동 제안 없이 사용자가 직접 클래스·관계를
+  지정해 저장할 수 있다. 임베딩 생성 실패 노드는 재임베딩 큐에 남아 복구 후 자동 재계산된다.
 - LLM 제안은 어디까지나 제안이다 — 파이프라인 오류가 있어도 사용자 검토 단계가 최종 방어선이다.
+
+### 5.4 관측성·운영
+
+| 영역 | 설계 |
+|---|---|
+| 트레이스 | OpenTelemetry로 요청 → 작업 → LLM 호출 → Cypher 쿼리까지 단일 trace id로 연결 |
+| 로그 | 구조화(JSON) 로그. LLM 호출은 **감사 로그**(프롬프트 버전·입출력 요약·토큰·비용·지연)로 별도 기록 — 제안 품질 문제의 사후 추적 근거 |
+| 메트릭 | 작업 성공/실패율·큐 길이·LLM 비용/일·검색 지연(p95)·그래프 규모. Prometheus 형식 노출 |
+| 헬스체크 | 모든 컨테이너에 healthcheck 정의(compose가 의존 순서·재시작 관리) |
+| 스키마 관리 | 버전 관리 마이그레이션 스크립트(제약·인덱스 포함) — 기동 시 자동 적용, 적용 이력을 DB에 기록 |
+| 품질 평가 | 골든셋(대표 사슬·별칭 판정·분류 사례) 기반 eval을 CI·프롬프트 변경 시 실행, 점수 하락 시 경고 |
+| 백업·복구 | 볼륨 스냅샷 + 주기 `/export`. 분기 1회 복구 리허설(빈 인스턴스 복원 → 무결성 규칙 전 항목 통과 확인) |
+| 보안 | bearer 토큰 인증 + rate limit, API 키는 환경변수/비밀 저장소 주입, Neo4j·Redis는 내부 네트워크에만 노출 |
+
+### 5.5 배포 토폴로지
+
+단일 호스트 docker compose로 시작하되, 계층이 분리되어 있어 확장 시 서비스별 분리만 하면 된다:
+
+```text
+compose 서비스: frontend(정적 빌드 서빙) · api(FastAPI, 무상태 — 증설 가능)
+              · worker(ARQ 워커 — 증설 가능) · neo4j(CE+GDS, 볼륨) · redis(큐·캠시)
+설정: 환경변수로만 주입(12-factor). 이미지는 버전 태그 고정(latest 금지)
+업그레이드: api/worker는 롤링 교체, neo4j는 백업 후 마이그레이션 적용 순서 준수
+```
 
 ---
 
@@ -412,6 +483,9 @@ graph TD
 
 - 매 실행은 새로운 `run_id`를 가지며, **최신 run만 활성**(기능 4가 참조). 이전 run의
   Community 노드·엣지는 이력으로 보존하되 비활성 표시(속성 `active: false`).
+- **LLM 비용 절감(lazy 재생성)**: 재실행 시 구성 개념이 이전 run과 동일한 군집은 기존
+  이름·서술을 재사용하고, 구성이 바뀐 군집만 LLM 재명명·재서술한다
+  ([5.2](#52-운영-관점-결함-분석과-고도화-결정) #10).
 - 개념 추가/업그레이드가 누적되면 화면에 "마지막 클러스터링 이후 N개 개념 변경 — 재실행
   권장" 배지를 표시.
 
@@ -520,8 +594,10 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 | 6 | `DELETE /classes/{id}?migrate_to=...` | 소속 개념 이관 후 클래스 제거 (이관 대상 필수) |
 | 공통 | `GET /export` | graph/ 형식(CSV·Cypher·GraphML·JSON) 백업 내보내기 — 자료의 산출물 형식 계승 |
 | 공통 | `GET /stats` | 개념 수·엣지 수·클래스 분포 등 통계 (항상 그래프에서 실시간 산출) |
+| 공통 | `GET /jobs/{id}` | 비동기 작업 상태·진행률·결과 조회 |
 
-`analyze`·`clustering/runs`는 비동기 작업(202 + 작업 id 반환, 진행 상태 폴링 — [5장](#5-시스템-아키텍처)).
+`analyze`·`upgrade`·`clustering/runs`는 비동기 작업으로 처리된다 — `202 Accepted` + 작업 id
+반환 후 `GET /jobs/{id}`로 폴링 ([5.3](#53-비동기-작업job-모델): 멱등성 키·재시도·DLQ).
 
 ---
 
@@ -553,7 +629,9 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 | 사용자 범위 | 1차 목표는 **개인 단일 사용자**. 멀티테넌시는 범위 외(확장 시 사용자별 DB 분리를 우선 검토) |
 | 규모 목표 | 개념 수만 노드·엣지까지 단일 Neo4j CE 인스턴스로 처리 |
 | 응답 목표 | 검색·그래프 조회 < 1초. LLM 분석·클러스터링은 비동기(수초~수십초 허용, 진행률 표시) |
-| 백업 | Neo4j 볼륨 스냅샷 + 주기적 `/export`(CSV·Cypher·GraphML·JSON) — 자료의 graph/ 형식이라 다른 그래프 DB로의 이식도 보장 |
+| 백업·복구 | Neo4j 볼륨 스냅샷 + 주기적 `/export`(CSV·Cypher·GraphML·JSON). 복구 목표: RPO ≤ 1일, RTO ≤ 1시간. 분기 1회 복구 리허설로 검증 ([5.4](#54-관측성운영)) |
+| 관측성 | OTel 트레이스·구조화 로그·Prometheus 메트릭·LLM 감사 로그 ([5.4](#54-관측성운영)) |
+| 품질 회귀 방지 | 골든셋 eval을 프롬프트·모델 변경 시 실행 ([5.2](#52-운영-관점-결함-분석과-고도화-결정) #7) |
 | 비용 | LLM 호출은 입력·업그레이드·클러스터링 시점에만 발생(검색은 임베딩 1회만). 관계 분석은 이웃 후보 top-N으로 컨텍스트를 제한 |
 | 비밀정보 | LLM·임베딩 API 키는 환경변수/비밀 저장소로만 주입, 코드·설정파일에 미포함 |
 
@@ -563,11 +641,12 @@ UI 가이드로 유지합니다(무분별한 신설 억제).
 
 | 단계 | 범위 | 산출물 |
 |---|---|---|
-| Phase 1 | 인프라 + 데이터 모델 | Neo4j CE+GDS docker compose, 스키마·제약·인덱스 생성 스크립트, dict1·dict2 데이터 시드 임포트(모델 매핑: Content→Concept, dict1의 SPECIALIZES→UPPER_OF) |
-| Phase 2 | 기능 1 (입력 파이프라인) | 초안 저장, 중복 탐지(전문+벡터), LLM 관계 분석, 검토 UI, 트랜잭션 저장+검증기 |
+| Phase 1 | 인프라 + 데이터 모델 | docker compose(neo4j·redis·api·worker·frontend, healthcheck), 버전 관리 마이그레이션(제약·인덱스), dict1·dict2 시드 임포트(Content→Concept, dict1의 SPECIALIZES→UPPER_OF), 관측성 기초(구조화 로그·healthcheck) |
+| Phase 2 | 기능 1 (입력 파이프라인) | 작업 큐·Job 모델, LLM 게이트웨이 계층, 초안 저장, 중복 탐지(전문+벡터), LLM 관계 분석, 검토 UI, 트랜잭션 저장+검증기, 골든셋 eval 초기 구축 |
 | Phase 3 | 기능 2 (탐색) | 하이브리드 검색 API + 결과 UI |
 | Phase 4 | 기능 3·4 (클러스터링+시각화) | GDS Leiden 파이프라인, LLM 클러스터 명명, Cytoscape.js 구조 탐색 화면 |
 | Phase 5 | 기능 5 (업그레이드) + 기능 6 (클래스 관리) + 내보내기 | 병합·재분석, 리비전, 클래스 CRUD·이관, `/export` 백업 |
+| Phase 6 | 운영 고도화 | OTel 트레이스·메트릭 대시보드, LLM 감사 로그 조회, 재임베딩 작업, 복구 리허설 자동화, rate limit·인증 강화 |
 
 각 Phase 종료 시 [13장](#13-데이터-무결성검증-규칙) 전 항목을 통과하는 자동 테스트를
 포함한다.
