@@ -24,6 +24,22 @@ hermes (명령)
 
 ---
 
+## 들어가기 전에 — 필요한 배경과 비유
+
+**필요한 배경**: [01](01_source_overview.md)의 디렉토리 지도, 그리고 "터미널에서 명령을
+친다"는 개념. 함수 호출이 무엇인지 알면 더 좋습니다.
+
+**비유**: 진입점(entry point)은 건물의 **정문**입니다. 터미널에 `hermes`라고 치면
+운영체제가 정문을 열어 주고(`[project.scripts]` 등록), 그 안의 안내데스크(`main()`)가
+"어떤 용건이세요?"를 묻고(명령줄 파싱), 용건별 담당 부서(하위 명령 함수)로 연결해
+줍니다. 이 문서는 "`hermes` 한 단어를 치는 순간부터 대화 화면이 뜨기까지"의 여정을
+한 단계씩 따라갑니다.
+
+**학습 목표**: `hermes` 실행 → `hermes_cli/main.py`의 `main()` → 명령 분기 →
+`HermesCLI` 대화 루프로 이어지는 호출 사슬을 그림으로 그릴 수 있게 됩니다.
+
+---
+
 ## 1. 세 개의 진입점
 
 `pyproject.toml`의 `[project.scripts]`가 정의합니다.
@@ -196,4 +212,20 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIBillingMixin):
 `HermesCLI`가 실제로 사용자 메시지를 처리할 때는 내부적으로 `AIAgent`
 (`run_agent.py`)의 `run_conversation`을 호출합니다. 그 "두뇌"가 다음 문서의
 주제입니다.
-→ [04_agent_loop.md](04_agent_loop.md)
+
+---
+
+## 정리 — 스스로 점검 질문
+
+**핵심 요약**
+- 진입점은 `pyproject.toml`의 `[project.scripts]`가 정의하며, 모두 `hermes_cli/main.py`의 `main()`으로 모인다.
+- `main()` 앞부분은 "print 한 줄 전에 해야 할 일"(부트스트랩, 프로파일, 로깅 등)을 순서대로 처리한다 — 순서가 곱 설계다.
+- 하위 명령이 없으면 기본값은 `chat`이고, 대화형 세션은 `cli.py`의 `HermesCLI`가 오케스트레이션한다.
+
+**점검 질문**
+1. 터미널의 `hermes`라는 단어가 어떻게 `main()` 함수 실행으로 이어지는가?
+2. `main()`이 출력보다 먼저 처리하는 일에는 어떤 것들이 있고, 왜 순서가 중요한가?
+3. `hermes`만 치면 왜 채팅 모드가 시작되는가?
+4. `HermesCLI`와 `AIAgent`의 역할 분담은? (힌트: 오케스트레이션 vs 두뇌)
+
+다음 문서 → [04_agent_loop.md](04_agent_loop.md)

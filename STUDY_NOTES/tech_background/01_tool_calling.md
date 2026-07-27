@@ -20,6 +20,20 @@
 
 ---
 
+## 들어가기 전에 — 필요한 배경과 비유
+
+**필요한 배경**: LLM·JSON·API 개념([../000_absolute_basics.md](../000_absolute_basics.md)).
+
+**비유**: LLM은 말을 아주 잘하지만 손발이 없는 사장님입니다. 도구 호출(tool calling)은
+사장님에게 **결재 서식**을 주는 일입니다: "이 서식(JSON 스키마)대로 적어 주시면
+직원(프로그램)이 실제로 실행하겠습니다." 사장님이 자유로운 문장 대신 정해진 서식으로
+지시하게 되면서, "말만 하는 AI"가 "일하는 AI"가 됩니다.
+
+**학습 목표**: 도구 호출의 한 바퀴(스키마 제시 → 호출 JSON → 실행 → 결과 반환)를
+그릴 수 있고, ReAct에서 현대 function calling API까지의 역사를 한 줄씩 말할 수 있게 됩니다.
+
+---
+
 ## 1. 핵심 정의: 말만 하는 챗봇에서 행동하는 에이전트로
 
 **LLM ([용어사전](../../dict/01_llm_basics.md#llm))(대형 언어 모델)** 은 본질적으로 "다음 단어를 예측하는" 텍스트 생성기입니다.
@@ -267,6 +281,15 @@ Hermes는 위 개념들을 정면으로 구현합니다.
 - Anthropic Tool Use 문서 — <https://docs.anthropic.com/en/docs/build-with-claude/tool-use>
 - Berkeley Function Calling Leaderboard — <https://gorilla.cs.berkeley.edu/leaderboard.html>
 - JSON Schema 규격 — <https://json-schema.org/>
+
+---
+
+## 정리 — 스스로 점검 질문
+
+1. 도구 호출 루프의 4단계를 JSON 예시와 함께 설명할 수 있는가?
+2. ReAct의 핵심 아이디어(추론과 행동의 교차)는 무엇이며, 현대 function calling과 어떻게 다른가?
+3. 도구 스키마가 매 호출마다 전송된다는 사실이 Hermes의 "좁은 허리" 설계에 어떻게 이어지는가?
+4. 모델이 잘못된 인자로 도구를 부를 때 에이전트는 어떻게 복구하는가?
 
 다음 문서: 이 루프를 "경험에서 배우는" 방향으로 확장한
 [02_self_improving_agents.md](02_self_improving_agents.md)

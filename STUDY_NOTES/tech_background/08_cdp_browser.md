@@ -19,6 +19,21 @@
 
 ---
 
+## 들어가기 전에 — 필요한 배경과 비유
+
+**필요한 배경**: 브라우저가 웹페이지를 보여주는 프로그램이라는 감각,
+그리고 API 개념([../000_absolute_basics.md](../000_absolute_basics.md) 3절).
+
+**비유**: 개발자 도구(F12)로 웹페이지를 들여다보고 조작해 본 적이 있다면, CDP는 바로
+그 개발자 도구가 브라우저와 대화할 때 쓰는 **무전 조종 채널**입니다. 사람 대신
+프로그램(에이전트)이 이 채널에 접속하면, 페이지 이동·클릭·입력·스크린샷을 전부
+자동으로 할 수 있습니다.
+
+**학습 목표**: CDP의 구조(도메인·WebSocket)와 Playwright 같은 상위 도구의 관계,
+Hermes browser_tool이 CDP를 쓰는 방식을 설명할 수 있게 됩니다.
+
+---
+
 ## 1. 핵심 정의
 
 **CDP(Chrome DevTools Protocol)** 는 크롬/크로미움 브라우저를 프로그램으로
@@ -180,6 +195,15 @@ graph TD
 
 **논문 (에이전트 웹 조작)**
 - Zhou et al., "WebArena: A Realistic Web Environment for Building Autonomous Agents" (2023) — <https://arxiv.org/abs/2307.13854>
+
+---
+
+## 정리 — 스스로 점검 질문
+
+1. CDP와 Selenium(WebDriver) 방식의 근본적 차이는 무엇인가?
+2. Playwright는 CDP 위에서 무엇을 더해 주는가?
+3. 에이전트가 사용자의 기존 브라우저 프로필(로그인 상태)에 붙을 때의 장점과 위험은?
+4. 스크린샷 기반 조작과 DOM 기반 조작은 각각 언제 유리한가?
 
 다음 문서: 에이전트가 명령을 안전하게 실행하는 곳 —
 [09_execution_environments.md](09_execution_environments.md)

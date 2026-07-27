@@ -20,6 +20,21 @@ Agents 등)의 히스토리를 정리한 뒤 Hermes 코드와 연결합니다.
 
 ---
 
+## 들어가기 전에 — 필요한 배경과 비유
+
+**필요한 배경**: [01_tool_calling.md](01_tool_calling.md)의 도구 호출 루프.
+
+**비유**: 매일 기억이 초기화되는 직원이라도, 퇴근 전에 오늘 배운 것을 **업무 일지와
+매뉴얼**로 남기면 회사는 계속 똑똑해집니다. 자기개선 에이전트는 모델 가중치를 바꾸지
+않고(재학습 없이), **경험을 글(스킬·메모리)로 바꿔 다음 세션에 재사용**하는 방식으로
+똑똑해집니다. "학습 = 가중치 수정"이 아니라 "학습 = 문서 축적"이라는 발상의 전환이
+이 문서의 핵심입니다.
+
+**학습 목표**: Voyager·Reflexion 같은 연구가 보여준 아이디어와 Hermes의 스킬/큐레이터
+구현을 연결해 설명할 수 있게 됩니다.
+
+---
+
 ## 1. 핵심 정의
 
 **자기개선 에이전트 ([용어사전](../../dict/05_memory_self_improvement.md#self-improving-agent))(self-improving agent)** 란, 작업을 수행하며 얻은 경험을
@@ -200,6 +215,15 @@ graph TD
 **기술 문서**
 - Anthropic, "Agent Skills" 문서 (마크다운 스킬 + progressive disclosure 패턴) — <https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills>
 - mem0 — <https://mem0.ai/> / Letta(구 MemGPT) — <https://www.letta.com/>
+
+---
+
+## 정리 — 스스로 점검 질문
+
+1. "가중치 재학습 없는 학습"이 가능한 이유를 컨텍스트/프롬프트 관점에서 설명할 수 있는가?
+2. Voyager의 스킬 라이브러리와 Hermes의 SKILL.md 체계는 무엇이 같고 무엇이 다른가?
+3. 자기개선 루프에서 "잘못된 교훈이 축적되는" 위험은 무엇으로 관리되는가? (힌트: 큐레이터·표준)
+4. 절차적 기억(스킬)과 의미적 기억(메모리)의 차이는?
 
 다음 문서: 축적된 지식과 대화가 컨텍스트 한도를 넘을 때의 대응 —
 [03_context_compression.md](03_context_compression.md)
